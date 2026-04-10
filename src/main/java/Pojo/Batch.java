@@ -1,0 +1,111 @@
+package Pojo;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.util.Date;
+
+//todo connection
+
+@Entity
+public class Batch {
+    public Batch(){}
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String batchNumber;
+    private Date expiryDate;
+    private Date receivedDate;
+    private String supplier;
+    private Integer price;
+    private Integer qtyReceived;
+    private Integer qtyInStock;
+    private String storageZone;
+    @CreationTimestamp
+    private Instant createdAt;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getBatchNumber() {
+        return batchNumber;
+    }
+
+    public void setBatchNumber(String batchNumber) {
+        this.batchNumber = batchNumber;
+    }
+
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public Date getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(Date receivedDate) {
+        this.receivedDate = receivedDate;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public Integer getQtyReceived() {
+        return qtyReceived;
+    }
+
+    public void setQtyReceived(Integer qtyReceived) {
+        this.qtyReceived = qtyReceived;
+    }
+
+    public Integer getQtyInStock() {
+        return qtyInStock;
+    }
+
+    public void setQtyInStock(Integer qtyInStock) {
+        this.qtyInStock = qtyInStock;
+    }
+
+    public String getStorageZone() {
+        return storageZone;
+    }
+
+    public void setStorageZone(String storageZone) {
+        this.storageZone = storageZone;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+}
