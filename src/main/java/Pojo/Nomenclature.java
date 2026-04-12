@@ -1,11 +1,10 @@
 package Pojo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 
-//todo connections
+import java.util.List;
+
 //todo json
 
 @Entity
@@ -28,6 +27,67 @@ public class Nomenclature {
     private boolean isReceipt;
     private boolean isNarcotic;
     private boolean isPsycho;
+
+    @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("nomenclature")
+    private List<ChequePosition> chequePositions;
+
+    @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("nomenclature")
+    private List<Batch> batches;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atcManual_id")
+    @JsonIgnoreProperties("nomenclatures")
+    private AtcManual atcManual;
+
+    @ManyToMany(mappedBy = "nomenclatures", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("nomenclatures")
+    private List<NomenclatureCategory> nomenclatureCategories;
+
+    @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("nomenclature")
+    private List<MarkingCode> markingCodes;
+
+    public List<MarkingCode> getMarkingCodes() {
+        return markingCodes;
+    }
+
+    public void setMarkingCodes(List<MarkingCode> markingCodes) {
+        this.markingCodes = markingCodes;
+    }
+
+    public List<NomenclatureCategory> getNomenclatureCategories() {
+        return nomenclatureCategories;
+    }
+
+    public void setNomenclatureCategories(List<NomenclatureCategory> nomenclatureCategories) {
+        this.nomenclatureCategories = nomenclatureCategories;
+    }
+
+    public AtcManual getAtcManual() {
+        return atcManual;
+    }
+
+    public void setAtcManual(AtcManual atcManual) {
+        this.atcManual = atcManual;
+    }
+
+    public List<Batch> getBatches() {
+        return batches;
+    }
+
+    public void setBatches(List<Batch> batches) {
+        this.batches = batches;
+    }
+
+    public List<ChequePosition> getChequePositions() {
+        return chequePositions;
+    }
+
+    public void setChequePositions(List<ChequePosition> chequePositions) {
+        this.chequePositions = chequePositions;
+    }
 
     public Long getId() {
         return id;

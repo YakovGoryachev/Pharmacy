@@ -1,10 +1,12 @@
 package Pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.management.InstanceNotFoundException;
 import java.time.Instant;
+import java.util.List;
 
 //todo make constraints
 
@@ -27,6 +29,42 @@ public class Pharmacy {
     private boolean is_active;
     @CreationTimestamp
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "pharmacy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("pharmacy")
+    private List<User> users;
+
+    @OneToMany(mappedBy = "pharmacy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("pharmacy")
+    private List<Cheque> cheques;
+
+    @OneToMany(mappedBy = "pharmacy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("pharmacy")
+    private List<Stock> stocks;
+
+    public List<Stock> getStocks() {
+        return stocks;
+    }
+
+    public void setStocks(List<Stock> stocks) {
+        this.stocks = stocks;
+    }
+
+    public List<Cheque> getCheques() {
+        return cheques;
+    }
+
+    public void setCheques(List<Cheque> cheques) {
+        this.cheques = cheques;
+    }
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
 
     public String getName() {
         return name;

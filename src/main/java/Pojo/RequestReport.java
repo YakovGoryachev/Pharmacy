@@ -1,13 +1,13 @@
 package Pojo;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-//todo connections JSON
+//todo JSON
+//todo check type report
 
 public class RequestReport {
     public RequestReport(){}
@@ -15,14 +15,26 @@ public class RequestReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String action;
-    private String entityName;
-    private Long entityId;
-    private record oldValues(){}
-    private record newValues(){}
-    @CreationTimestamp
-    private Instant timestamp;
+    private String reportType;
+    private record filters(){
 
+    }
+    private String filePath;
+    @CreationTimestamp
+    private Instant generatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties("requestReports")
+    private User user;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public Long getId() {
         return id;
@@ -32,35 +44,27 @@ public class RequestReport {
         this.id = id;
     }
 
-    public String getAction() {
-        return action;
+    public String getReportType() {
+        return reportType;
     }
 
-    public void setAction(String action) {
-        this.action = action;
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
     }
 
-    public String getEntityName() {
-        return entityName;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    public Long getEntityId() {
-        return entityId;
+    public Instant getGeneratedAt() {
+        return generatedAt;
     }
 
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setGeneratedAt(Instant generatedAt) {
+        this.generatedAt = generatedAt;
     }
 }

@@ -1,14 +1,11 @@
 package Pojo;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.Date;
-
-//todo connections
 
 public class MarkingCode {
     public MarkingCode(){}
@@ -27,6 +24,44 @@ public class MarkingCode {
     @CreationTimestamp
     private Instant createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nomenclature_id")
+    @JsonIgnoreProperties("markingCodes")
+    private Nomenclature nomenclature;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    @JsonIgnoreProperties("markingCodes")
+    private Batch batch;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chequePosition_id")
+    @JsonIgnoreProperties("markingCode")
+    private ChequePosition chequePosition;
+
+    public ChequePosition getChequePosition() {
+        return chequePosition;
+    }
+
+    public void setChequePosition(ChequePosition chequePosition) {
+        this.chequePosition = chequePosition;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
+    }
+
+    public Nomenclature getNomenclature() {
+        return nomenclature;
+    }
+
+    public void setNomenclature(Nomenclature nomenclature) {
+        this.nomenclature = nomenclature;
+    }
 
     public Long getId() {
         return id;

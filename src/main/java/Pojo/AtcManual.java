@@ -1,12 +1,11 @@
 package Pojo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 
 //todo check type of code
 
@@ -23,6 +22,18 @@ public class AtcManual {
     private Long parentId;
     @CreationTimestamp
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "atcManual", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("atcManual")
+    private List<Nomenclature> nomenclatures;
+
+    public List<Nomenclature> getNomenclatures() {
+        return nomenclatures;
+    }
+
+    public void setNomenclatures(List<Nomenclature> nomenclatures) {
+        this.nomenclatures = nomenclatures;
+    }
 
     public Long getId() {
         return id;

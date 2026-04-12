@@ -1,15 +1,12 @@
 package Pojo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.Date;
-
-//todo connection
+import java.util.List;
 
 @Entity
 public class Batch {
@@ -28,6 +25,55 @@ public class Batch {
     private String storageZone;
     @CreationTimestamp
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("batch")
+    private List<ChequePosition> chequePositions;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nomenclature_id")
+    @JsonIgnoreProperties("batches")
+    private Nomenclature nomenclature;
+
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("batch")
+    private List<MarkingCode> markingCodes;
+
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("batch")
+    private List<Stock> stocks;
+
+    public List<Stock> getStocks() {
+        return stocks;
+    }
+
+    public void setStocks(List<Stock> stocks) {
+        this.stocks = stocks;
+    }
+
+    public List<MarkingCode> getMarkingCodes() {
+        return markingCodes;
+    }
+
+    public void setMarkingCodes(List<MarkingCode> markingCodes) {
+        this.markingCodes = markingCodes;
+    }
+
+    public Nomenclature getNomenclature() {
+        return nomenclature;
+    }
+
+    public void setNomenclature(Nomenclature nomenclature) {
+        this.nomenclature = nomenclature;
+    }
+
+    public List<ChequePosition> getChequePositions() {
+        return chequePositions;
+    }
+
+    public void setChequePositions(List<ChequePosition> chequePositions) {
+        this.chequePositions = chequePositions;
+    }
 
     public Long getId() {
         return id;

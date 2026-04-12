@@ -1,9 +1,12 @@
 package Pojo;
 
-//todo connections code roles code pharmacies
 //todo constraints
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
+import java.util.List;
+
 @Entity
 @Table (name="users")
 public class User {
@@ -19,6 +22,67 @@ public class User {
     private String name;
     private String email;
     private String phoneNumber;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    @JsonIgnoreProperties("users")
+    private Roles role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacy_id")
+    @JsonIgnoreProperties("users")
+    private Pharmacy pharmacy;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("user")
+    private List<Cheque> cheques;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("user")
+    private List<AuditLog> auditLogs;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("user")
+    private List<RequestReport> requestReports;
+
+    public List<RequestReport> getRequestReports() {
+        return requestReports;
+    }
+
+    public void setRequestReports(List<RequestReport> requestReports) {
+        this.requestReports = requestReports;
+    }
+
+    public List<AuditLog> getAuditLogs() {
+        return auditLogs;
+    }
+
+    public void setAuditLogs(List<AuditLog> auditLogs) {
+        this.auditLogs = auditLogs;
+    }
+
+    public List<Cheque> getCheques() {
+        return cheques;
+    }
+
+    public void setCheques(List<Cheque> cheques) {
+        this.cheques = cheques;
+    }
+
+    public Roles getRole() {
+        return role;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
+    }
+
+    public Pharmacy getPharmacy() {
+        return pharmacy;
+    }
+
+    public void setPharmacy(Pharmacy pharmacy) {
+        this.pharmacy = pharmacy;
+    }
 
     public Long getId() {
         return id;

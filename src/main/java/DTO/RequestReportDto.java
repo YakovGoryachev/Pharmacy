@@ -14,24 +14,23 @@ public class RequestReportDto {
 
     }
 
-    public RequestReportDto(Long id, String action, String entityName, Long entityId, Instant timestamp) {
+    public RequestReportDto(Long id, String reportType, String filePath, Instant generatedAt) {
         this.id = id;
-        this.action = action;
-        this.entityName = entityName;
-        this.entityId = entityId;
-        this.timestamp = timestamp;
+        this.reportType = reportType;
+        this.filePath = filePath;
+        this.generatedAt = generatedAt;
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String action;
-    private String entityName;
-    private Long entityId;
-    private record oldValues(){}
-    private record newValues(){}
+    private String reportType;
+    private record filters(){
+
+    }
+    private String filePath;
     @CreationTimestamp
-    private Instant timestamp;
+    private Instant generatedAt;
 
     public Long getId() {
         return id;
@@ -41,35 +40,27 @@ public class RequestReportDto {
         this.id = id;
     }
 
-    public String getAction() {
-        return action;
+    public String getReportType() {
+        return reportType;
     }
 
-    public void setAction(String action) {
-        this.action = action;
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
     }
 
-    public String getEntityName() {
-        return entityName;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    public Long getEntityId() {
-        return entityId;
+    public Instant getGeneratedAt() {
+        return generatedAt;
     }
 
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setGeneratedAt(Instant generatedAt) {
+        this.generatedAt = generatedAt;
     }
 }

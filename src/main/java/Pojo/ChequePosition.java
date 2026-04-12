@@ -1,16 +1,12 @@
 package Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-//todo connections receipt
-//todo json
+//todo json receipt
 
 @Entity
 public class ChequePosition {
@@ -28,6 +24,57 @@ public class ChequePosition {
     ){}
     @CreationTimestamp
     private Instant createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cheque_id")
+    @JsonIgnoreProperties("chequePositions")
+    private Cheque cheque;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nomenclature_id")
+    @JsonIgnoreProperties("chequePositions")
+    private Nomenclature nomenclature;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    @JsonIgnoreProperties("chequePositions")
+    private Batch batch;
+
+    @OneToOne(mappedBy = "chequePosition", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("chequePosition")
+    private MarkingCode markingCode;
+
+    public MarkingCode getMarkingCode() {
+        return markingCode;
+    }
+
+    public void setMarkingCode(MarkingCode markingCode) {
+        this.markingCode = markingCode;
+    }
+
+    public Cheque getCheque() {
+        return cheque;
+    }
+
+    public void setCheque(Cheque cheque) {
+        this.cheque = cheque;
+    }
+
+    public Nomenclature getNomenclature() {
+        return nomenclature;
+    }
+
+    public void setNomenclature(Nomenclature nomenclature) {
+        this.nomenclature = nomenclature;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
+    }
 
     public Long getId() {
         return id;
