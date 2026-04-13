@@ -1,4 +1,4 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -41,9 +41,20 @@ public class Nomenclature {
     @JsonIgnoreProperties("nomenclatures")
     private AtcManual atcManual;
 
-    @ManyToMany(mappedBy = "nomenclatures", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    //check
+//    @ManyToMany(mappedBy = "nomenclatures", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    @JsonIgnoreProperties("nomenclatures")
+//    private List<NomenclatureCategory> nomenclatureCategories;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "nomenclature_category", // Имя промежуточной таблицы
+            joinColumns = @JoinColumn(name = "nomenclature_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
     @JsonIgnoreProperties("nomenclatures")
     private List<NomenclatureCategory> nomenclatureCategories;
+
 
     @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("nomenclature")

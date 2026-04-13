@@ -1,11 +1,6 @@
-package DTO;
+package com.example.pharmacy.DTO;
 
-import Pojo.PaymentMethod;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import org.hibernate.annotations.CreationTimestamp;
+import com.example.pharmacy.Pojo.PaymentMethod;
 
 import java.time.Instant;
 

@@ -1,4 +1,4 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 import jakarta.persistence.Embeddable;
 

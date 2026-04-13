@@ -1,50 +1,30 @@
-package Pojo;
+package com.example.pharmacy.DTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
 //todo connections
 
-public class Stock {
-    public Stock(){
+public class StockDto {
+    public StockDto(){
+
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public StockDto(Long id, Integer quantity, Integer reserved, Instant lastUpdated) {
+        this.id = id;
+        this.quantity = quantity;
+        this.reserved = reserved;
+        this.lastUpdated = lastUpdated;
+    }
+
     private Long id;
     private Integer quantity;
     private Integer reserved;
-    @CreationTimestamp
     private Instant lastUpdated;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pharmacy_id")
-    @JsonIgnoreProperties("stocks")
-    private Pharmacy pharmacy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id")
-    @JsonIgnoreProperties("stocks")
-    private Batch batch;
-
-    public Pharmacy getPharmacy() {
-        return pharmacy;
-    }
-
-    public void setPharmacy(Pharmacy pharmacy) {
-        this.pharmacy = pharmacy;
-    }
-
-    public Batch getBatch() {
-        return batch;
-    }
-
-    public void setBatch(Batch batch) {
-        this.batch = batch;
-    }
 
     public Long getId() {
         return id;

@@ -1,11 +1,6 @@
-package DTO;
+package com.example.pharmacy.DTO;
 
-import Pojo.Address;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import org.hibernate.annotations.CreationTimestamp;
+import com.example.pharmacy.Pojo.Address;
 
 import java.time.Instant;
 

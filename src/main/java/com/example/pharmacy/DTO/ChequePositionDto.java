@@ -1,4 +1,4 @@
-package DTO;
+package com.example.pharmacy.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.GeneratedValue;

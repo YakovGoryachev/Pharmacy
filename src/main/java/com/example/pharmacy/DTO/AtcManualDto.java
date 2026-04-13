@@ -1,39 +1,34 @@
-package Pojo;
+package com.example.pharmacy.DTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.List;
 
-//todo check type of code
+//todo connectinos
 
-@Entity
-public class AtcManual {
-    public AtcManual(){}
+public class AtcManualDto {
+    public AtcManualDto(){
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    }
+
+    public AtcManualDto(Long id, String code, Integer level, String name, Long parentId, Instant createdAt) {
+        this.id = id;
+        this.code = code;
+        this.level = level;
+        this.name = name;
+        this.parentId = parentId;
+        this.createdAt = createdAt;
+    }
+
     private Long id;
     private String code;
     private Integer level;
     private String name;
     private Long parentId;
-    @CreationTimestamp
     private Instant createdAt;
-
-    @OneToMany(mappedBy = "atcManual", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnoreProperties("atcManual")
-    private List<Nomenclature> nomenclatures;
-
-    public List<Nomenclature> getNomenclatures() {
-        return nomenclatures;
-    }
-
-    public void setNomenclatures(List<Nomenclature> nomenclatures) {
-        this.nomenclatures = nomenclatures;
-    }
 
     public Long getId() {
         return id;

@@ -1,40 +1,30 @@
-package Pojo;
+package com.example.pharmacy.DTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.List;
 
-//todo constraints
+//todo connections
 
-@Entity
-@Table(name="roles")
-public class Roles {
-    public Roles(){
+public class RolesDto {
+    public RolesDto(){
 
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public RolesDto(Long id, String name, String description, Instant createdAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
+    }
+
     private Long id;
     private String name;
     private String description;
-    @CreationTimestamp
     private Instant createdAt;
-
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("role")
-    private List<User> users;
-
-    public List<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<User> users) {
-        this.users = users;
-    }
 
     public Long getId() {
         return id;

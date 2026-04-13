@@ -1,10 +1,9 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import javax.management.InstanceNotFoundException;
 import java.time.Instant;
 import java.util.List;
 

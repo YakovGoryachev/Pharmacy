@@ -1,38 +1,34 @@
-package Pojo;
+package com.example.pharmacy.DTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.List;
 
-@Entity
-public class NomenclatureCategory {
-    public NomenclatureCategory(){
+//todo connections
+
+public class NomenclatureCategoryDto {
+    public NomenclatureCategoryDto(){
+
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public NomenclatureCategoryDto(Long id, String name, String code, Long parentId, boolean isSystem, Instant createdAt) {
+        this.id = id;
+        this.name = name;
+        this.code = code;
+        this.parentId = parentId;
+        this.isSystem = isSystem;
+        this.createdAt = createdAt;
+    }
+
     private Long id;
     private String name;
     private String code;
     private Long parentId;
     private boolean isSystem;
-    @CreationTimestamp
     private Instant createdAt;
-
-    @ManyToMany(mappedBy = "nomenclatureCategories", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("nomenclatureCategories")
-    private List<Nomenclature> nomenclatures;
-
-    public List<Nomenclature> getNomenclatures() {
-        return nomenclatures;
-    }
-
-    public void setNomenclatures(List<Nomenclature> nomenclatures) {
-        this.nomenclatures = nomenclatures;
-    }
 
     public Long getId() {
         return id;

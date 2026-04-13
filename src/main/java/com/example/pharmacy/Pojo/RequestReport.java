@@ -1,4 +1,4 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -9,6 +9,7 @@ import java.time.Instant;
 //todo JSON
 //todo check type report
 
+@Entity
 public class RequestReport {
     public RequestReport(){}
 

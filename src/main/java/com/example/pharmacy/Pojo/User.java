@@ -1,4 +1,4 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 //todo constraints
 

@@ -1,4 +1,4 @@
-package Pojo;
+package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -40,6 +40,7 @@ public class ChequePosition {
     @JsonIgnoreProperties("chequePositions")
     private Batch batch;
 
+    //chek
     @OneToOne(mappedBy = "chequePosition", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnoreProperties("chequePosition")
     private MarkingCode markingCode;
