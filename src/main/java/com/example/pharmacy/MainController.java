@@ -11,8 +11,7 @@ public class MainController {
     }
 
     @GetMapping("/hello")
-    @ResponseBody
     public String view(){
-        return "<h1>hello</h1>";
+        return "uchet-lp";
     }
 }
