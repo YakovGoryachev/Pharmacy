@@ -2,6 +2,7 @@ package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
@@ -24,8 +25,11 @@ public class Nomenclature {
     private String barcode;
     private record storageConditions(){}
     private Integer minStockLevel;
+    @Column(nullable = true)
     private boolean isReceipt;
+    @Column(nullable = true)
     private boolean isNarcotic;
+    @Column(nullable = true)
     private boolean isPsycho;
 
     @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -48,7 +52,7 @@ public class Nomenclature {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "nomenclature_category", // Имя промежуточной таблицы
+            name = "nomenclature_category",
             joinColumns = @JoinColumn(name = "nomenclature_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
