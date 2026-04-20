@@ -112,7 +112,7 @@
     <nav class="sidebar-nav">
       <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
       <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
-      <a class="nav-link active" href="/batches"><span class="nav-icon">📦</span> Склад и Партии</a>
+      <a class="nav-link active" href="/ware"><span class="nav-icon">📦</span> Склад и Партии</a>
       <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
       <a class="nav-link" href="/audit"><span class="nav-icon">🔐</span> Аудит и Роли</a>
     </nav>
@@ -190,7 +190,8 @@
                   <th>Препарат / МНН</th>
                   <th>Поставщик</th>
                   <th>Дата прибытия</th>
-                  <th>Срок годности</th>
+                  <th>Дата производства</th>
+                  <th>Годен до</th>
                   <th>Цена за ед.</th>
                   <th>Кол-во</th>
                   <th>Зона хранения</th>
@@ -206,13 +207,20 @@
                     <div class="font-bold" th:text="${batch.nomenclature.brandName}"></div>
                     <div class="text-xs text-muted" th:text="${batch.nomenclature.MNN}"></div>
                   </td>
-                  <td>ООО «ФармаТрейд»</td>
-                  <td>15.01.2025</td>
-                  <td>12.12.2027</td>
+                  <td th:text="${batch.supplier}">ООО «ФармаТрейд»</td>
+                  <td th:text="${batch.receivedDate}">15.01.2025</td>
+                  <td th:text="${batch.productionDate}"></td>
+                  <td th:text="${batch.expiryDate}">12.12.2027</td>
                   <td th:text="${batch.price}">120 ₽</td>
                   <td th:text="${batch.qtyReceived}">1 240 шт</td>
                   <td><span class="storage-zone" th:text="${batch.storageZone}">Секция А</span></td>
-                  <td><span class="badge badge-success"><span class="status-dot dot-active"></span> В наличии</span></td>
+                  <td>
+                    <span class="badge badge-success">
+                      <span class="status-dot dot-active">
+                    </span> В наличии</span>
+<!--                    <span th:if="${batch.isWrittenOff}" class="badge badge-danger">Списана</span>-->
+<!--                    <span th:unless="${batch.isWrittenOff}" class="badge badge-success">В наличии</span>-->
+                  </td>
                   <td class="row-actions">
                     <button class="btn btn-ghost btn-sm" title="Просмотр"><i class="fas fa-eye"></i></button>
                     <button class="btn btn-ghost btn-sm" title="История"><i class="fas fa-history"></i></button>

@@ -1,5 +1,6 @@
 package com.example.pharmacy.Controllers;
 
+import com.example.pharmacy.DTO.BatchDto;
 import com.example.pharmacy.Pojo.Batch;
 import com.example.pharmacy.Service.BatchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,11 @@ public class WarehouseController {
         model.addAttribute("batches", bl);
 
         return "warehouse-main";
+    }
+
+    @GetMapping("batches/reception")
+    public String priemka(Model model){
+        model.addAttribute("batchCommand", new BatchDto());
+        return "warehouse-acceptance";
     }
 }

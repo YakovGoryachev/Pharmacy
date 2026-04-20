@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -16,13 +17,16 @@ public class Batch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String batchNumber;
-    private Date expiryDate;
-    private Date receivedDate;
+    private LocalDate expiryDate; //was Date
+    private LocalDate productionDate;
+    private LocalDate receivedDate;
     private String supplier;
     private Integer price;
     private Integer qtyReceived;
     private Integer qtyInStock;
     private String storageZone;
+    @Column(nullable = true)
+    private Boolean isWrittenOff;
     @CreationTimestamp
     private Instant createdAt;
 
@@ -45,6 +49,22 @@ public class Batch {
 
     public List<Stock> getStocks() {
         return stocks;
+    }
+
+    public boolean isWrittenOff() {
+        return isWrittenOff;
+    }
+
+    public void setWrittenOff(boolean writtenOff) {
+        isWrittenOff = writtenOff;
+    }
+
+    public LocalDate getProductionDate() {
+        return productionDate;
+    }
+
+    public void setProductionDate(LocalDate productionDate) {
+        this.productionDate = productionDate;
     }
 
     public void setStocks(List<Stock> stocks) {
@@ -89,22 +109,6 @@ public class Batch {
 
     public void setBatchNumber(String batchNumber) {
         this.batchNumber = batchNumber;
-    }
-
-    public Date getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public Date getReceivedDate() {
-        return receivedDate;
-    }
-
-    public void setReceivedDate(Date receivedDate) {
-        this.receivedDate = receivedDate;
     }
 
     public String getSupplier() {
@@ -153,5 +157,21 @@ public class Batch {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(LocalDate expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public LocalDate getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(LocalDate receivedDate) {
+        this.receivedDate = receivedDate;
     }
 }

@@ -23,14 +23,15 @@ public class Nomenclature {
     private String manufacturer;
     private String country;
     private String barcode;
+    private Integer price;
     private record storageConditions(){}
     private Integer minStockLevel;
     @Column(nullable = true)
-    private boolean isReceipt;
+    private Boolean isReceipt;
     @Column(nullable = true)
-    private boolean isNarcotic;
+    private Boolean isNarcotic;
     @Column(nullable = true)
-    private boolean isPsycho;
+    private Boolean isPsycho;
 
     @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("nomenclature")
@@ -205,6 +206,38 @@ public class Nomenclature {
     }
 
     public void setPsycho(boolean psycho) {
+        isPsycho = psycho;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public Boolean getReceipt() {
+        return isReceipt;
+    }
+
+    public void setReceipt(Boolean receipt) {
+        isReceipt = receipt;
+    }
+
+    public Boolean getNarcotic() {
+        return isNarcotic;
+    }
+
+    public void setNarcotic(Boolean narcotic) {
+        isNarcotic = narcotic;
+    }
+
+    public Boolean getPsycho() {
+        return isPsycho;
+    }
+
+    public void setPsycho(Boolean psycho) {
         isPsycho = psycho;
     }
 }

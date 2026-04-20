@@ -2,6 +2,7 @@ package com.example.pharmacy.DTO;
 
 //todo connections
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class BatchDto {
@@ -9,9 +10,9 @@ public class BatchDto {
 
     }
 
-    public BatchDto(Long id, String batchNumber, Date expiryDate, Date receivedDate, String supplier, Integer price, Integer qtyReceived, Integer qtyInStock, String storageZone) {
+    public BatchDto(Long id, Long nomenclatureId, LocalDate productionDate, String batchNumber, LocalDate expiryDate, LocalDate receivedDate, String supplier, Integer price, Integer qtyReceived, Integer qtyInStock, String storageZone) {
         this.id = id;
-        BatchNumber = batchNumber;
+        this.batchNumber = batchNumber;
         this.expiryDate = expiryDate;
         this.receivedDate = receivedDate;
         this.supplier = supplier;
@@ -22,14 +23,25 @@ public class BatchDto {
     }
 
     private Long id;
-    private String BatchNumber;
-    private Date expiryDate;
-    private Date receivedDate;
+    private Long nomenclatureId;
+    private String batchNumber;
+    private LocalDate expiryDate;
+    private LocalDate productionDate;
+    private LocalDate receivedDate;
     private String supplier;
     private Integer price;
     private Integer qtyReceived;
     private Integer qtyInStock;
     private String storageZone;
+    private Boolean isWrittenOff;
+
+    public Boolean isWrittenOff() {
+        return isWrittenOff;
+    }
+
+    public void setWrittenOff(Boolean writtenOff) {
+        isWrittenOff = writtenOff;
+    }
 
     public Long getId() {
         return id;
@@ -40,27 +52,11 @@ public class BatchDto {
     }
 
     public String getBatchNumber() {
-        return BatchNumber;
+        return batchNumber;
     }
 
     public void setBatchNumber(String batchNumber) {
-        BatchNumber = batchNumber;
-    }
-
-    public Date getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public Date getReceivedDate() {
-        return receivedDate;
-    }
-
-    public void setReceivedDate(Date receivedDate) {
-        this.receivedDate = receivedDate;
+        this.batchNumber = batchNumber;
     }
 
     public String getSupplier() {
@@ -101,5 +97,37 @@ public class BatchDto {
 
     public void setStorageZone(String storageZone) {
         this.storageZone = storageZone;
+    }
+
+    public Long getNomenclatureId() {
+        return nomenclatureId;
+    }
+
+    public void setNomenclatureId(Long nomenclatureId) {
+        this.nomenclatureId = nomenclatureId;
+    }
+
+    public void setExpiryDate(LocalDate expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public LocalDate getProductionDate() {
+        return productionDate;
+    }
+
+    public void setProductionDate(LocalDate productionDate) {
+        this.productionDate = productionDate;
+    }
+
+    public void setReceivedDate(LocalDate receivedDate) {
+        this.receivedDate = receivedDate;
+    }
+
+    public LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+
+    public LocalDate getReceivedDate() {
+        return receivedDate;
     }
 }
