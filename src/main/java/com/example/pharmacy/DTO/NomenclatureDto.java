@@ -11,36 +11,99 @@ public class NomenclatureDto {
 
     }
 
-    public NomenclatureDto(Long id, String MNN, String brandName, String formOfRelease, Integer dosage, Integer quantityInPack, String manufacturer, String country, String barcode, Integer minStockLevel, boolean isReceipt, boolean isNarcotic, boolean isPsycho) {
+    public NomenclatureDto(Long id, String mnn, String brandName, String formOfRelease, Integer dosage, Integer qtyInPack, String manufacturer, String country, String barcode, Integer minStockLevel, Boolean Receipt, Boolean Narcotic, Boolean Psycho) {
         this.id = id;
-        this.MNN = MNN;
+        this.mnn = mnn;
         this.brandName = brandName;
         this.formOfRelease = formOfRelease;
         this.dosage = dosage;
-        this.quantityInPack = quantityInPack;
+        this.qtyInPack = qtyInPack;
         this.manufacturer = manufacturer;
         this.country = country;
         this.barcode = barcode;
         this.minStockLevel = minStockLevel;
-        this.isReceipt = isReceipt;
-        this.isNarcotic = isNarcotic;
-        this.isPsycho = isPsycho;
+        this.Receipt = Receipt;
+        this.Narcotic = Narcotic;
+        this.Psycho = Psycho;
     }
 
     private Long id;
-    private String MNN;
+    private Long atxId;
+    private String mnn;
+    private String atxCode;
     private String brandName;
     private String formOfRelease;
     private Integer dosage;
-    private Integer quantityInPack;
+    private String dosageUnit;
+    private Integer qtyInPack;
     private String manufacturer;
     private String country;
     private String barcode;
+    private Integer price;
     private record storageConditions(){}
     private Integer minStockLevel;
-    private boolean isReceipt;
-    private boolean isNarcotic;
-    private boolean isPsycho;
+    private Boolean Receipt;
+    private Boolean Narcotic;
+    private Boolean Psycho;
+
+    private Long productCategoryId;
+    private String productCategoryName;
+
+    public String getDosageUnit() {
+        return dosageUnit;
+    }
+
+    public void setDosageUnit(String dosageUnit) {
+        this.dosageUnit = dosageUnit;
+    }
+
+    public String getProductCategoryName() {
+        return productCategoryName;
+    }
+
+    public void setProductCategoryName(String productCategoryName) {
+        this.productCategoryName = productCategoryName;
+    }
+
+    public Long getAtxId() {
+        return atxId;
+    }
+
+    public void setAtxId(Long atxId) {
+        this.atxId = atxId;
+    }
+
+    public Long getProductCategoryId() {
+        return productCategoryId;
+    }
+
+    public void setProductCategoryId(Long productCategoryId) {
+        this.productCategoryId = productCategoryId;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public String getMnn() {
+        return mnn;
+    }
+
+    public void setMnn(String mnn) {
+        this.mnn = mnn;
+    }
+
+    public String getAtxCode() {
+        return atxCode;
+    }
+
+    public void setAtxCode(String atxCode) {
+        this.atxCode = atxCode;
+    }
 
     public Long getId() {
         return id;
@@ -50,13 +113,7 @@ public class NomenclatureDto {
         this.id = id;
     }
 
-    public String getMNN() {
-        return MNN;
-    }
 
-    public void setMNN(String MNN) {
-        this.MNN = MNN;
-    }
 
     public String getBrandName() {
         return brandName;
@@ -82,12 +139,12 @@ public class NomenclatureDto {
         this.dosage = dosage;
     }
 
-    public Integer getQuantityInPack() {
-        return quantityInPack;
+    public Integer getQtyInPack() {
+        return qtyInPack;
     }
 
-    public void setQuantityInPack(Integer quantityInPack) {
-        this.quantityInPack = quantityInPack;
+    public void setQtyInPack(Integer qtyInPack) {
+        this.qtyInPack = qtyInPack;
     }
 
     public String getManufacturer() {
@@ -122,27 +179,27 @@ public class NomenclatureDto {
         this.minStockLevel = minStockLevel;
     }
 
-    public boolean isReceipt() {
-        return isReceipt;
+    public Boolean getReceipt() {
+        return Receipt;
     }
 
-    public void setReceipt(boolean receipt) {
-        isReceipt = receipt;
+    public void setReceipt(Boolean receipt) {
+        Receipt = receipt;
     }
 
-    public boolean isNarcotic() {
-        return isNarcotic;
+    public Boolean getNarcotic() {
+        return Narcotic;
     }
 
-    public void setNarcotic(boolean narcotic) {
-        isNarcotic = narcotic;
+    public void setNarcotic(Boolean narcotic) {
+        Narcotic = narcotic;
     }
 
-    public boolean isPsycho() {
-        return isPsycho;
+    public Boolean getPsycho() {
+        return Psycho;
     }
 
-    public void setPsycho(boolean psycho) {
-        isPsycho = psycho;
+    public void setPsycho(Boolean psycho) {
+        Psycho = psycho;
     }
 }

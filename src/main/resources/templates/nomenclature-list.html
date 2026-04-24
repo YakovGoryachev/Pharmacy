@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Номенклатура — АИС «ФармаСеть»</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style-uni.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
+      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
+      <a class="nav-link" href="/ware"><span class="nav-icon">📦</span> Склад и Партии</a>
+      <a class="nav-link active" href="/nomenclature"><span class="nav-icon">💊</span> Номенклатура</a>
+      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
+    </nav>
+    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
+  </aside>
+  <main class="main-area">
+    <header class="topbar">
+      <h1 class="topbar-title">Справочник номенклатуры</h1>
+      <div class="topbar-actions">
+        <span class="badge badge-neutral">Зав. аптекой</span>
+        <div class="user-avatar">ИИ</div>
+      </div>
+    </header>
+    <div class="content-scroll">
+      <div class="container" style="max-width:1400px;">
+        <div class="breadcrumb">
+          <a href="/dashboard">Главная</a> <span class="breadcrumb-sep">/</span> <span>Номенклатура</span>
+        </div>
+
+        <div class="card">
+          <!-- Шапка + кнопка создания -->
+          <div class="card-header">
+            <h3 style="margin:0;">💊 Реестр лекарственных средств</h3>
+            <a th:href="@{/nomenclature/create}" class="btn btn-primary btn-sm">
+              <i class="fas fa-plus"></i> Добавить номенклатуру
+            </a>
+          </div>
+
+          <!-- Фильтры -->
+          <form th:action="@{/nomenclature}" method="get" class="filter-bar">
+            <div class="form-group">
+              <label for="fSearch">Поиск</label>
+              <input type="text" id="fSearch" name="q" th:value="${param.q}" class="form-control" placeholder="Название, МНН, штрихкод...">
+            </div>
+            <div class="form-group">
+              <label for="fAtx">Код АТХ</label>
+              <input type="text" id="fAtx" name="atx" th:value="${param.atx}" class="form-control" placeholder="Напр. C03">
+            </div>
+            <div class="form-group">
+              <label for="fCategory">Категория</label>
+              <select id="fCategory" name="category" class="form-control">
+                <option value="">Все</option>
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:selected="${param.category == cat.id}">Категория</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fFlags">Особые</label>
+              <select id="fFlags" name="flags" class="form-control">
+                <option value="">Все</option>
+                <option value="rx" th:selected="${param.flags=='rx'}">Только рецептурные</option>
+                <option value="narcotic" th:selected="${param.flags=='narcotic'}">Наркотические</option>
+                <option value="psychotropic" th:selected="${param.flags=='psychotropic'}">Психотропные</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:0;">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Найти</button>
+              <a th:href="@{/nomenclature}" class="btn btn-ghost btn-sm"><i class="fas fa-undo"></i></a>
+            </div>
+          </form>
+
+          <!-- Таблица -->
+          <div class="table-responsive">
+            <table class="data-table" id="nomTable">
+              <thead>
+              <tr>
+                <th>
+                  <span>Торговое наименование</span>
+                  <a th:href="@{/nomenclature(sort='tradeName',dir=${sortDir=='asc'?'desc':'asc'},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="btn btn-ghost btn-sm" style="padding:0 0.3rem;">
+                    <i th:class="${sortField=='tradeName'?(sortDir=='asc'?'fas fa-sort-up':'fas fa-sort-down'):'fas fa-sort'}"></i>
+                  </a>
+                </th>
+                <th>МНН</th>
+                <th>АТХ</th>
+                <th>Форма / Дозировка</th>
+                <th>Производитель</th>
+                <th>Штрихкод</th>
+                <th>Цена</th>
+                <th>Мин. остаток</th>
+                <th>Статусы</th>
+                <th>Действия</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="nom : ${nomenclatures}">
+                <td>
+                  <div class="font-bold" th:text="${nom.brandName}">Название</div>
+<!--                  <div class="text-xs text-muted" th:text="${nom.category?.name}">Категория</div>-->
+                </td>
+                <td th:text="${nom.mnn}">MNN</td>
+<!--                <td>-->
+<!--                  <span class="badge badge-info" th:text="${nom.atxCode}">C03CA01</span>-->
+<!--                </td>-->
+                <td>
+                  <div th:text="${nom.formOfRelease}">Таблетки</div>
+                  <div class="text-xs text-muted" th:text="${nom.dosage}">200 мг</div>
+                </td>
+                <td>
+                  <div th:text="${nom.manufacturer}">Производитель</div>
+                  <div class="text-xs text-muted" th:text="${nom.country}">Страна</div>
+                </td>
+                <td class="text-xs" th:text="${nom.barcode}">460...</td>
+                <td class="font-bold" th:text="${nom.price != null ? nom.price + ' ₽' : '—'}">0 ₽</td>
+                <td th:text="${nom.minStockLevel}">10</td>
+                <td>
+                  <span th:if="${nom.receipt}" class="badge badge-warning" title="По рецепту">📋</span>
+                  <span th:if="${nom.narcotic}" class="badge badge-danger" title="Наркотическое">⚠️</span>
+                  <span th:if="${nom.psychotropic}" class="badge badge-danger" title="Психотропное">🧠</span>
+                  <span th:if="${nom.receipt != true && nom.narcotic != true && nom.psychotropic != true}" class="badge badge-success">Без рецепта</span>
+                </td>
+                <td class="row-actions">
+                  <a th:href="@{/nomenclature/edit/{id}(id=${nom.id})}" class="btn btn-ghost btn-sm" title="Редактировать"><i class="fas fa-pen"></i></a>
+                  <a th:href="@{/nomenclature/delete/{id}(id=${nom.id})}" class="btn btn-ghost btn-sm text-danger" title="Удалить" onclick="return confirm('Удалить номенклатуру?')"><i class="fas fa-trash"></i></a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(nomenclatures)}">
+                <td colspan="10" class="text-center text-muted p-1">
+                  Номенклатура не найдена. <a th:href="@{/nomen-add}">Добавить первую запись</a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Пагинация -->
+<!--          <div class="pagination">-->
+<!--            <a th:if="${currentPage > 0}" th:href="@{/nomenclature(page=${currentPage-1},size=${pageSize},sort=${sortField},dir=${sortDir},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="page-btn">←</a>-->
+<!--            <th:block th:each="i : ${#numbers.sequence(0, totalPages-1)}">-->
+<!--              <a th:if="${i == currentPage}" class="page-btn active" th:text="${i+1}">1</a>-->
+<!--              <a th:unless="${i == currentPage}" th:href="@{/nomenclature(page=${i},size=${pageSize},sort=${sortField},dir=${sortDir},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="page-btn" th:text="${i+1}">2</a>-->
+<!--            </th:block>-->
+<!--            <a th:if="${currentPage < totalPages-1}" th:href="@{/nomenclature(page=${currentPage+1},size=${pageSize},sort=${sortField},dir=${sortDir},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="page-btn">→</a>-->
+<!--          </div>-->
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

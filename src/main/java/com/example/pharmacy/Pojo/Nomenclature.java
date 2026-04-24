@@ -15,10 +15,11 @@ public class Nomenclature {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String MNN;
+    private String mnn;
     private String brandName;
     private String formOfRelease;
     private Integer dosage;
+    private String dosageUnit;
     private Integer quantityInPack;
     private String manufacturer;
     private String country;
@@ -27,11 +28,11 @@ public class Nomenclature {
     private record storageConditions(){}
     private Integer minStockLevel;
     @Column(nullable = true)
-    private Boolean isReceipt;
+    private Boolean receipt;
     @Column(nullable = true)
-    private Boolean isNarcotic;
+    private Boolean narcotic;
     @Column(nullable = true)
-    private Boolean isPsycho;
+    private Boolean psychotropic;
 
     @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("nomenclature")
@@ -113,12 +114,12 @@ public class Nomenclature {
         this.id = id;
     }
 
-    public String getMNN() {
-        return MNN;
+    public String getMnn() {
+        return mnn;
     }
 
-    public void setMNN(String MNN) {
-        this.MNN = MNN;
+    public void setMnn(String mnn) {
+        this.mnn = mnn;
     }
 
     public String getBrandName() {
@@ -185,30 +186,6 @@ public class Nomenclature {
         this.minStockLevel = minStockLevel;
     }
 
-    public boolean isReceipt() {
-        return isReceipt;
-    }
-
-    public void setReceipt(boolean receipt) {
-        isReceipt = receipt;
-    }
-
-    public boolean isNarcotic() {
-        return isNarcotic;
-    }
-
-    public void setNarcotic(boolean narcotic) {
-        isNarcotic = narcotic;
-    }
-
-    public boolean isPsycho() {
-        return isPsycho;
-    }
-
-    public void setPsycho(boolean psycho) {
-        isPsycho = psycho;
-    }
-
     public Integer getPrice() {
         return price;
     }
@@ -218,26 +195,34 @@ public class Nomenclature {
     }
 
     public Boolean getReceipt() {
-        return isReceipt;
+        return receipt;
     }
 
     public void setReceipt(Boolean receipt) {
-        isReceipt = receipt;
+        this.receipt = receipt;
     }
 
     public Boolean getNarcotic() {
-        return isNarcotic;
+        return narcotic;
     }
 
     public void setNarcotic(Boolean narcotic) {
-        isNarcotic = narcotic;
+        this.narcotic = narcotic;
     }
 
-    public Boolean getPsycho() {
-        return isPsycho;
+    public Boolean getPsychotropic() {
+        return psychotropic;
     }
 
-    public void setPsycho(Boolean psycho) {
-        isPsycho = psycho;
+    public void setPsychotropic(Boolean psychotropic) {
+        this.psychotropic = psychotropic;
+    }
+
+    public String getDosageUnit() {
+        return dosageUnit;
+    }
+
+    public void setDosageUnit(String dosageUnit) {
+        this.dosageUnit = dosageUnit;
     }
 }

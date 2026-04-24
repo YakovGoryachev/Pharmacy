@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Создание номенклатуры — АИС «ФармаСеть»</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style-uni.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
+      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
+      <a class="nav-link" href="/ware"><span class="nav-icon">📦</span> Склад и Партии</a>
+      <a class="nav-link active" href="/nomenclature"><span class="nav-icon">💊</span> Номенклатура</a>
+      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
+    </nav>
+    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
+  </aside>
+  <main class="main-area">
+    <header class="topbar">
+      <h1 class="topbar-title" id="pageTitle">Новое лекарственное средство</h1>
+      <div class="topbar-actions">
+        <span class="badge badge-neutral">Зав. аптекой</span>
+        <div class="user-avatar">ИИ</div>
+      </div>
+    </header>
+    <div class="content-scroll">
+      <div class="container" style="max-width:1100px;">
+        <div class="breadcrumb">
+          <a href="/nomenclature">Номенклатура</a> <span class="breadcrumb-sep">/</span> <span id="bcText">Создание</span>
+        </div>
+        <div class="card">
+          <form th:action="@{/nomenclature/save}" th:object="${nomCommand}" method="post" id="nomForm">
+            <!-- Скрытое поле ID (для редактирования) -->
+            <input type="hidden" th:field="*{id}">
+
+            <!-- Секция 1: Основные данные -->
+            <div class="card-body">
+              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+                <i class="fas fa-info-circle text-primary"></i> Основные сведения
+              </h3>
+              <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">Код АТХ <span class="text-danger">*</span></label>
+                  <input type="text" id="atxSearchInput" th:field="*{atxCode}" class="form-control" placeholder="Введите код, напр. C03CA01" required>
+                  <input type="hidden" id="selectedAtxId" name="atxId" th:field="*{atxId}">
+                  <div id="atxDropdown" class="card" style="position:absolute;z-index:100;max-height:200px;overflow-y:auto;display:none;margin-top:4px;box-shadow:var(--shadow-md);"></div>
+                  <div class="form-helper" id="atxHint">Введите минимум 2 символа для поиска по справочнику АТХ</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">МНН <span class="text-danger">*</span></label>
+                  <input type="text" th:field="*{mnn}" class="form-control" placeholder="Международное непатентованное, напр. Ibuprofen" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Торговая марка <span class="text-danger">*</span></label>
+                  <input type="text" th:field="*{brandName}" class="form-control" placeholder="Торговое название, напр. Нурофен Экспресс" required>
+                </div>
+
+<!--                категория-->
+<!--                <div class="form-group">-->
+<!--                  <label class="form-label">Категория товаров</label>-->
+<!--                  <select th:field="*{productCategoryId}" class="form-control">-->
+<!--                    <option value="">&#45;&#45; Выберите категорию &#45;&#45;</option>-->
+<!--                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Категория</option>-->
+<!--                  </select>-->
+<!--                </div>-->
+                <div class="form-group autocomp-wrapper">
+                  <label class="form-label">Категория товаров</label>
+                  <input type="text" id="catInput" class="form-control" placeholder="Начните вводить название..." th:field="*{productCategoryName}">
+                  <input type="hidden" id="catHiddenId" th:field="*{productCategoryId}">
+                  <div id="catDrop" class="autocomp-dropdown"></div>
+                  <div id="catCreateHint" class="form-helper cursor-pointer text-primary" style="display:none;margin-top:0.25rem;">
+                    <i class="fas fa-plus-circle"></i> Создать: "<span id="catNewName"></span>"
+                  </div>
+                  <small class="form-helper">Введите название или создайте новую</small>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Секция 2: Характеристики -->
+            <div class="card-body" style="background:#fafbfc;">
+              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+                <i class="fas fa-pills text-primary"></i> Характеристики препарата
+              </h3>
+              <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">Форма выпуска</label>
+                  <select th:field="*{formOfRelease}" class="form-control">
+                    <option value="">-- Выберите --</option>
+                    <option value="TABLET">Таблетки</option>
+                    <option value="CAPSULE">Капсулы</option>
+                    <option value="SOLUTION">Раствор</option>
+                    <option value="OINTMENT">Мазь/Крем</option>
+                    <option value="SYRUP">Сироп</option>
+                    <option value="DROPS">Капли</option>
+                    <option value="SPRAY">Спрей</option>
+                    <option value="POWDER">Порошок</option>
+                    <option value="INJECTION">Раствор для инъекций</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Дозировка</label>
+                  <div class="input-group">
+<!--                    <input type="text" th:field="*{dosage}" class="form-control" placeholder="Напр. 200 мг, 500 МЕ/мл">-->
+                    <input type="text"
+                           th:field="*{dosage}"
+                           class="form-control"
+                           placeholder="200"
+                           style="border-radius: var(--radius-sm) 0 0 var(--radius-sm);">
+                    <select th:field="*{dosageUnit}"
+                            class="form-control form-select"
+                            style="max-width: 110px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
+                      <option value="">ед.</option>
+                      <option value="мг">мг</option>
+                      <option value="мл">мл</option>
+                      <option value="г">г</option>
+                      <option value="мкг">мкг</option>
+                      <option value="МЕ">МЕ</option>
+                      <option value="МЕ/мл">МЕ/мл</option>
+                      <option value="%">%</option>
+                      <option value="шт">шт</option>
+                      <option value="кап">кап</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Кол-во в упаковке</label>
+                  <input type="number" th:field="*{qtyInPack}" class="form-control" placeholder="Напр. 20" min="1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Производитель</label>
+                  <input type="text" th:field="*{manufacturer}" class="form-control" placeholder="Напр. Reckitt Benckiser">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Страна производства</label>
+                  <input type="text" th:field="*{country}" class="form-control" placeholder="Напр. Великобритания">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Штрихкод (EAN-13)</label>
+                  <input type="text" th:field="*{barcode}" class="form-control" placeholder="4607003762035">
+                </div>
+              </div>
+            </div>
+
+            <!-- Секция 3: Цены и контроль -->
+            <div class="card-body">
+              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+                <i class="fas fa-coins text-primary"></i> Цены и контроль остатков
+              </h3>
+              <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">Розничная цена</label>
+                  <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Мин. остаток (порог предупреждения)</label>
+                  <input type="number" th:field="*{minStockLevel}" class="form-control" placeholder="При остатке ниже — предупреждение" min="0">
+                  <div class="form-helper">Система предупредит при падении ниже этого значения</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Секция 4: Особые флаги -->
+            <div class="card-body" style="background:#fafbfc;">
+              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+                <i class="fas fa-exclamation-triangle text-warning"></i> Особые условия отпуска
+              </h3>
+              <div class="flex flex-wrap gap-1">
+                <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
+                  <input type="checkbox" th:field="*{Receipt}">
+                  <span>📋 Отпуск по рецепту</span>
+                </label>
+                <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
+                  <input type="checkbox" th:field="*{Narcotic}">
+                  <span>⚠️ Наркотическое средство</span>
+                </label>
+                <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
+                  <input type="checkbox" th:field="*{Psycho}">
+                  <span>🧠 Психотропное вещество</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Секция 5: Маркировка Data Matrix -->
+            <div class="card-body">
+              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+                <i class="fas fa-qrcode text-primary"></i> Маркировка «Честный ЗНАК»
+              </h3>
+              <div class="form-group">
+                <label class="form-label">Код маркировки Data Matrix</label>
+<!--                <textarea th:field="*{dataMatrixCodes}" class="form-control" rows="3" placeholder="Каждый код с новой строки (для серийного учёта)"></textarea>-->
+                <div class="form-helper">Если препарат подлежит обязательной маркировке. Введите серийные GTIN или оставьте пустым для ручного сканирования при продаже.</div>
+              </div>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="card-footer" style="justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+              <a href="/nomenclature" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> К списку</a>
+              <div class="flex gap-05">
+                <!-- Записать и закрыть — возврат на предыдущую страницу (или на список) -->
+                <button type="submit" class="btn btn-secondary" th:formaction="@{/nomenclature/save/close}">
+                  <i class="fas fa-save"></i> Записать и закрыть
+                </button>
+                <!-- Записать и продолжить — очистка формы для новой записи -->
+<!--                <button type="submit" class="btn btn-primary" th:formaction="@{/nomenclature/save/continue}">-->
+<!--                  <i class="fas fa-plus"></i> Записать и продолжить-->
+<!--                </button>-->
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Debounce функция (чтобы не слать запрос на каждый символ)
+ function debounce(func, wait) {
+     let timeout;
+     return function executedFunction(...args) {
+         const later = () => {
+             clearTimeout(timeout);
+             func(...args);
+         };
+         clearTimeout(timeout);
+         timeout = setTimeout(later, wait);
+     };
+ }
+
+ // Поиск ATX
+const atxInput = document.getElementById('atxSearchInput');
+const atxDropdown = document.getElementById('atxDropdown');
+const selectedAtxId = document.getElementById('selectedAtxId');
+
+// Проверка: если элементов нет на странице — выходим
+// (чтобы скрипт не падал на других страницах, где нет поля ATX)
+if (atxInput && atxDropdown) {
+    // Обработчик ввода с задержкой 300ms
+  atxInput.addEventListener('input', debounce(async function() {
+      // ✅ ИСПРАВЛЕНИЕ: используем atxInput.value вместо this.value
+      const query = atxInput.value.trim();
+
+      if (query.length < 2) {
+          atxDropdown.style.display = 'none';
+          return;
+      }
+
+      try {
+          const response = await fetch(`/api/atx/search?query=${encodeURIComponent(query)}`);
+          const results = await response.json();
+
+          if (results.length === 0) {
+              atxDropdown.innerHTML = '<div class="p-2 text-muted text-sm">Ничего не найдено</div>';
+              atxDropdown.style.display = 'block';
+              return;
+          }
+
+          // Формируем HTML результатов
+          atxDropdown.innerHTML = results.map(atx => `
+              <div class="p-2 cursor-pointer hover:bg-primary-light border-bottom"
+                   onclick="selectAtx('${atx.code}', '${atx.name}', ${atx.id})"
+                   style="cursor: pointer;">
+                  <div class="font-bold">${atx.code}</div>
+                  <div class="text-xs text-muted">${atx.name} (уровень ${atx.level})</div>
+              </div>
+          `).join('');
+
+          atxDropdown.style.display = 'block';
+
+      } catch (error) {
+          console.error('Ошибка поиска ATX:', error);
+      }
+  }, 300));
+}
+
+
+ // Выбор ATX из списка
+ function selectAtx(code, name, id) {
+     document.getElementById('atxSearchInput').value = code;
+     selectedAtxId.value = id;
+     atxDropdown.style.display = 'none';
+ }
+
+ // Закрыть dropdown при клике вне
+ document.addEventListener('click', function(e) {
+     if (!atxInput.contains(e.target) && !atxDropdown.contains(e.target)) {
+         atxDropdown.style.display = 'none';
+     }
+ });
+
+   // === Кнопки сохранения ===
+   function saveAndClose(){
+     // В проде: form.submit() с redirect на /ware или реферер
+     document.getElementById('nomForm').action='/nomenclature/save';
+     document.getElementById('nomForm').submit();
+   }
+
+   function saveAndContinue(){
+     // В проде: AJAX submit, затем очистка формы
+     const form=document.getElementById('nomForm');
+     // Демо: просто очистка
+     form.reset();
+     document.querySelector('input[name="id"]').value='';
+     document.getElementById('atxHint').textContent='Введите минимум 2 символа для поиска по справочнику АТХ';
+     alert('Запись сохранена. Форма очищена для нового ввода.');
+   }
+
+  // ==========================================
+// 📦 2. АВТОКОМПЛИТ КАТЕГОРИЙ (вставляет НАЗВАНИЕ)
+// ==========================================
+const catInput = document.getElementById('catInput');
+const catDrop = document.getElementById('catDrop');
+const catHidden = document.getElementById('catHiddenId');
+const catHint = document.getElementById('catCreateHint');
+const catNewSpan = document.getElementById('catNewName');
+
+if (catInput && catDrop && catHidden) {
+    catInput.addEventListener('input', debounce(async () => {
+        const q = catInput.value.trim();
+        catHidden.value = ''; // Сброс ID при ручном изменении
+        if (q.length < 2) { catDrop.style.display = 'none'; catHint.style.display = 'none'; return; }
+
+        try {
+            const res = await fetch(`/api/categories/search?query=${encodeURIComponent(q)}`);
+            const data = await res.json();
+
+            if (data.length > 0) {
+                catDrop.innerHTML = data.map(c => `
+                    <div class="p-2 cursor-pointer dropdown-item border-bottom"
+                         data-id="${c.id}" data-name="${c.name}">
+                        <div class="font-bold">${c.name}</div>
+                    </div>
+                `).join('');
+                catDrop.style.display = 'block';
+                catHint.style.display = 'none';
+            } else {
+                catDrop.style.display = 'none';
+                catNewSpan.textContent = q;
+                catHint.style.display = 'block';
+            }
+        } catch(e) { console.error('Cat Error:', e); }
+    }, 300));
+
+    // Клик по найденной категории
+    catDrop.addEventListener('click', e => {
+        const row = e.target.closest('.dropdown-item');
+        if (!row) return;
+        catInput.value = row.dataset.name;
+        catHidden.value = row.dataset.id;
+        catDrop.style.display = 'none';
+        catHint.style.display = 'none';
+    });
+
+    // Клик по "Создать новую"
+    catHint.addEventListener('click', async () => {
+        const name = catNewSpan.textContent;
+        if (!name) return;
+        try {
+            const res = await fetch('/api/categories/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name})
+            });
+            if (res.ok) {
+                const newCat = await res.json();
+                catInput.value = newCat.name;
+                catHidden.value = newCat.id;
+                catHint.style.display = 'none';
+            } else { alert('Ошибка создания категории'); }
+        } catch(e) { alert('Ошибка сети'); }
+    });
+}
+
+// ==========================================
+// 🖱 ЗАКРЫТИЕ ВЫПАДАЮЩИХ СПИСКОВ ПРИ КЛИКЕ ВНЕ
+// ==========================================
+document.addEventListener('click', e => {
+    if (atxDropdown && !atxInput.contains(e.target) && !atxDropdown.contains(e.target)) atxDropdown.style.display = 'none';
+    if (catDrop && !catInput.contains(e.target) && !catDrop.contains(e.target) && !catHint.contains(e.target)) {
+        catDrop.style.display = 'none';
+        catHint.style.display = 'none';
+    }
+});
+
+</script>
+</body>
+</html>
