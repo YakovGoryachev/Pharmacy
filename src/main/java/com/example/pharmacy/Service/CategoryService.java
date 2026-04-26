@@ -34,7 +34,7 @@ public class CategoryService {
                 });
     }
 
-    public List<NomenclatureCategoryDto> getAll() {
+    public List<NomenclatureCategoryDto> findAll() {
         return categoryRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
     }
 

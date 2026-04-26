@@ -2,6 +2,7 @@ package com.example.pharmacy.Specifications;
 
 import com.example.pharmacy.Pojo.Batch;
 import com.example.pharmacy.Pojo.Nomenclature;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -38,20 +39,27 @@ public class NomenclatureSpecifications {
                 predicates.add(criteriaBuilder.or(byTradeName, byMnn, byBarcode, byForm));
             }
 
-            // 🧬 Фильтр по АТХ (точное совпадение или LIKE)
             if (atx != null && !atx.isBlank()) {
                 predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.upper(root.get("atxCode")),
+                        criteriaBuilder.upper(
+                                root.join("atcManual", JoinType.LEFT).get("code")
+                        ),
                         atx.toUpperCase() + "%"));
             }
 
-            // 📦 Фильтр по категории
-            if (categoryId != null && categoryId > 0) {
-                // Если категория — это связь @ManyToOne:
-                predicates.add(criteriaBuilder.equal(
-                        root.get("productCategory").get("id"), categoryId));
-                // Если просто ID в таблице:
-                // predicates.add(criteriaBuilder.equal(root.get("productCategoryId"), categoryId));
+//            if (categoryId != null && categoryId > 0) {
+//                // Если категория — это связь @ManyToOne:
+//                predicates.add(criteriaBuilder.equal(
+//                        root.get("productCategory").get("id"), categoryId));
+//                // Если просто ID в таблице:
+//                // predicates.add(criteriaBuilder.equal(root.get("productCategoryId"), categoryId));
+//            }
+            if (categoryId != null && categoryId > 0){
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.upper(
+                                root.join("nomenclatureCategories", JoinType.LEFT).get("code")
+                        ),
+                        atx.toUpperCase() + "%"));
             }
 
             // 🏷️ Фильтр по флагам (рецепт/наркотик/психотроп)

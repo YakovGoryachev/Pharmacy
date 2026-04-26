@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Приёмка партии — АИС «ФармаСеть»</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style-uni.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
+      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
+      <a class="nav-link active" href="/ware"><span class="nav-icon">📦</span> Склад и Партии</a>
+      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
+    </nav>
+    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <h1 class="topbar-title">Приёмка новой партии</h1>
+      <div class="topbar-actions">
+        <span class="badge badge-neutral">Зав. аптекой</span>
+        <div class="user-avatar">ИИ</div>
+      </div>
+    </header>
+
+    <div class="content-scroll">
+      <div class="container" style="max-width: 1000px;">
+
+        <div class="breadcrumb">
+          <a href="/batches">Склад</a> <span class="breadcrumb-sep">/</span> <span>Приёмка партии</span>
+        </div>
+
+        <div class="card">
+          <form th:action="@{/batches/reception}" th:object="${batchCommand}" method="post">
+
+            <!-- 1. Блок выбора номенклатуры -->
+<!--            <div class="card-body">-->
+<!--              <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(&#45;&#45;border); padding-bottom: 0.5rem;">-->
+<!--                <i class="fas fa-capsules text-primary"></i> Выбор лекарственного средства-->
+<!--              </h3>-->
+<!--              <div class="form-group">-->
+<!--                <label class="form-label">Номенклатура (Препарат)</label>-->
+<!--                <div class="flex gap-05" style="align-items: flex-start;">-->
+<!--                  &lt;!&ndash; Список существующих препаратов &ndash;&gt;-->
+<!--                  <select th:field="*{nomenclatureId}" class="form-control" id="nomenclatureSelect" required>-->
+<!--                    <option value="">&#45;&#45; Выберите препарат из справочника &#45;&#45;</option>-->
+<!--                    <option th:each="nom : ${nomenclatureList}"-->
+<!--                            th:value="${nom.id}"-->
+<!--                            th:text="${nom.tradeName + ' (' + nom.mnn + ')'}">-->
+<!--                    </option>-->
+<!--                  </select>-->
+<!--                  &lt;!&ndash; Кнопка создания нового &ndash;&gt;-->
+<!--                  <button type="button" class="btn btn-secondary" onclick="openNomenclatureModal()">-->
+<!--                    <i class="fas fa-plus"></i> Создать новый-->
+<!--                  </button>-->
+<!--                </div>-->
+<!--                <div class="form-helper">Если препарата нет в списке, нажмите «Создать новый»</div>-->
+<!--              </div>-->
+<!--            </div>-->
+
+            <!-- 1. Блок выбора номенклатуры с поиском -->
+            <div class="card-body">
+              <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <i class="fas fa-capsules text-primary"></i> Выбор лекарственного средства
+              </h3>
+
+              <div class="form-group">
+                <label class="form-label">Номенклатура (Препарат)</label>
+
+                <!-- Поле поиска с автодополнением -->
+                <div style="position: relative;">
+                  <input type="text" id="nomenclatureSearch" class="form-control"
+                         placeholder="Начните вводить название, МНН или дозировку..."
+                         autocomplete="off" required>
+                  <div id="nomenclatureDropdown" class="card" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 100; max-height: 250px; overflow-y: auto; display: none; margin-top: 4px; box-shadow: var(--shadow-md);">
+                    <!-- Сюда будут подгружаться результаты поиска -->
+                  </div>
+                </div>
+
+                <!-- Скрытое поле для отправки ID на сервер -->
+                <input type="hidden" th:field="*{nomenclatureId}" id="selectedNomenclatureId">
+
+                <!-- Отображение выбранного препарата -->
+                <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display: none;">
+                  Выбрано: <strong id="selectedNomenclatureText"></strong>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding: 0 0.3rem; margin-left: 0.5rem;">✕</button>
+                </div>
+
+                <div class="form-helper">Введите минимум 2 символа для поиска. Если препарата нет — нажмите «Создать новый».</div>
+              </div>
+
+              <div class="flex gap-05 mt-1">
+                <button type="button" class="btn btn-secondary" onclick="openNomenclatureModal()">
+                  <i class="fas fa-plus"></i> Создать новый препарат
+                </button>
+                <button type="button" class="btn btn-ghost" onclick="showAllNomenclature()" id="showAllBtn" style="display: none;">
+                  <i class="fas fa-list"></i> Показать все
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Блок данных партии -->
+            <div class="card-body" style="background: #fafbfc;">
+              <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <i class="fas fa-barcode text-primary"></i> Информация о партии
+              </h3>
+
+              <div class="grid-2" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">Номер партии</label>
+                  <input type="text" th:field="*{batchNumber}" class="form-control" placeholder="Напр. P-10023" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Поставщик</label>
+                  <input type="text" th:field="*{supplier}" class="form-control" placeholder="ООО ФармаТрейд" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Дата поступления</label>
+                  <input type="date" th:field="*{productionDate}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Срок годности</label>
+                  <input type="date" th:field="*{expiryDate}" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Цена закупки (за ед.)</label>
+                  <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Зона хранения</label>
+                  <select th:field="*{storageZone}" class="form-control" required>
+                    <option value="ROOM_TEMP">Комнатная температура</option>
+                    <option value="FRIDGE">Холодильник (2-8°C)</option>
+                    <option value="DARK">Тёмное место</option>
+                    <option value="FREEZER">Морозильная камера</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Кол-во полученных (упаковок)</label>
+                  <input type="number" th:field="*{qtyReceived}" class="form-control" id="qtyReceived" placeholder="100" required oninput="syncQty()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Кол-во оставшихся</label>
+                  <input type="number" th:field="*{qtyInStock}" class="form-control" id="qtyRemaining" placeholder="Авто" readonly style="background: #f1f5f9;">
+                  <div class="form-helper">По умолчанию равно количеству поступления</div>
+                </div>
+              </div>
+
+              <div class="form-group mt-1">
+                <label class="form-check">
+                  <input type="checkbox" th:field="*{isWrittenOff}">
+                  <span>Партия списана (брак/возврат)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 3. Кнопки действий -->
+            <div class="card-footer" style="justify-content: space-between;">
+              <a href="/batches" class="btn btn-ghost">Отмена</a>
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-check"></i> Провести приёмку
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Создание новой номенклатуры -->
+<div class="modal-backdrop" id="nomenclatureModal">
+  <div class="modal" style="max-width: 550px;">
+    <div class="modal-header">
+      <h4 class="modal-title" style="margin:0;">Новое лекарственное средство</h4>
+      <button class="modal-close" onclick="closeNomenclatureModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Торговое наименование <span class="text-danger">*</span></label>
+        <input type="text" id="newTradeName" class="form-control" placeholder="Напр. Нурофен Экспресс" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">МНН (Международное непатентованное) <span class="text-danger">*</span></label>
+        <input type="text" id="newMnn" class="form-control" placeholder="Напр. Ibuprofen" required>
+      </div>
+      <div class="grid-2" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Форма выпуска</label>
+          <select id="newForm" class="form-control">
+            <option>Таблетки</option>
+            <option>Капсулы</option>
+            <option>Мазь</option>
+            <option>Раствор</option>
+            <option>Сироп</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Дозировка</label>
+          <input type="text" id="newDosage" class="form-control" placeholder="200мг">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeNomenclatureModal()">Закрыть</button>
+      <button type="button" class="btn btn-primary" onclick="saveNewNomenclature()">
+        <i class="fas fa-save"></i> Создать и выбрать
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // === УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ===
+  const modal = document.getElementById('nomenclatureModal');
+  function openNomenclatureModal() { modal.classList.add('active'); }
+  function closeNomenclatureModal() { modal.classList.remove('active'); }
+  modal.addEventListener('click', e => { if (e.target === modal) closeNomenclatureModal(); });
+
+  // === ЛОГИКА СОЗДАНИЯ НОМЕНКЛАТУРЫ (ДЕМО) ===
+  // В реальном проекте здесь будет fetch() запрос к API создания номенклатуры.
+  // После успешного создания бэк вернёт ID, который мы подставим в select.
+  function saveNewNomenclature() {
+      const name = document.getElementById('newTradeName').value.trim();
+      const mnn = document.getElementById('newMnn').value.trim();
+      const form = document.getElementById('newForm').value;
+      const dosage = document.getElementById('newDosage').value.trim();
+
+      if (!name || !mnn) {
+          alert('Заполните обязательные поля (Название и МНН)!');
+          return;
+      }
+
+      // 1. Имитация сохранения в БД (генерируем временный ID)
+      const newId = 'NEW_' + Date.now();
+      const displayText = `${name} (${mnn}) ${dosage ? '- ' + dosage : ''} [${form}]`;
+
+      // 2. Добавляем новую опцию в выпадающий список
+      const select = document.getElementById('nomenclatureSelect');
+      const option = document.createElement('option');
+      option.value = newId;
+      option.text = displayText;
+      option.selected = true; // Сразу выбираем созданное
+      select.add(option);
+
+      // 3. Закрываем модалку и чистим поля
+      closeNomenclatureModal();
+      document.getElementById('newTradeName').value = '';
+      document.getElementById('newMnn').value = '';
+      document.getElementById('newDosage').value = '';
+
+      // 4. Визуальный фидбек
+      console.log('Номенклатура создана:', name, mnn);
+  }
+
+  // === АВТО-СИНХРОНИЗАЦИЯ КОЛИЧЕСТВА ===
+  function syncQty() {
+      const received = document.getElementById('qtyReceived').value;
+      document.getElementById('qtyRemaining').value = received || '';
+  }
+
+  // === ДАННЫЕ ДЛЯ ПОИСКА (в реальном проекте — загрузка с сервера) ===
+// Формат: [{ id, tradeName, mnn, form, dosage, displayText }]
+const nomenclatureData = [
+  /* Пример данных — в реальном проекте подгружаются с бэка */
+  { id: 1, tradeName: 'Парацетамол', mnn: 'Paracetamol', form: 'Таблетки', dosage: '500 мг', displayText: 'Парацетамол 500 мг таб. (Paracetamol)' },
+  { id: 2, tradeName: 'Аквадетрим', mnn: 'Cholecalciferolum', form: 'Капли', dosage: '500 МЕ/мл', displayText: 'Аквадетрим 500 МЕ/мл капли (Cholecalciferolum)' },
+  { id: 3, tradeName: 'Нурофен', mnn: 'Ibuprofen', form: 'Таблетки', dosage: '200 мг', displayText: 'Нурофен 200 мг таб. (Ibuprofen)' },
+  { id: 4, tradeName: 'Нурофен', mnn: 'Ibuprofen', form: 'Суспензия', dosage: '100 мг/5 мл', displayText: 'Нурофен 100 мг/5 мл сусп. (Ibuprofen)' },
+  // ... остальные препараты
+];
+
+// === ЛОГИКА ПОИСКА ===
+const searchInput = document.getElementById('nomenclatureSearch');
+const dropdown = document.getElementById('nomenclatureDropdown');
+const selectedIdInput = document.getElementById('selectedNomenclatureId');
+const selectedInfo = document.getElementById('selectedNomenclatureInfo');
+const selectedText = document.getElementById('selectedNomenclatureText');
+const showAllBtn = document.getElementById('showAllBtn');
+
+// Поиск при вводе
+searchInput.addEventListener('input', function() {
+  const query = this.value.trim().toLowerCase();
+
+  if (query.length < 2) {
+    dropdown.style.display = 'none';
+    showAllBtn.style.display = query.length === 0 ? 'inline-flex' : 'none';
+    return;
+  }
+
+  showAllBtn.style.display = 'none';
+  const results = nomenclatureData.filter(item =>
+    item.tradeName.toLowerCase().includes(query) ||
+    item.mnn.toLowerCase().includes(query) ||
+    item.form.toLowerCase().includes(query) ||
+    (item.dosage && item.dosage.toLowerCase().includes(query)) ||
+    item.displayText.toLowerCase().includes(query)
+  );
+
+  renderDropdown(results);
+});
+
+// Отрисовка результатов
+function renderDropdown(items) {
+  if (items.length === 0) {
+    dropdown.innerHTML = '<div class="p-1 text-muted text-sm">Ничего не найдено</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+
+  dropdown.innerHTML = items.map(item => `
+    <div class="p-1 cursor-pointer hover:bg-primary-light"
+         onclick="selectNomenclature(${item.id}, '${item.displayText.replace(/'/g, "\\'")}')">
+      <div class="font-bold">${item.tradeName} ${item.dosage || ''}</div>
+      <div class="text-xs text-muted">${item.mnn} • ${item.form}</div>
+    </div>
+  `).join('');
+  dropdown.style.display = 'block';
+}
+
+// Выбор препарата
+function selectNomenclature(id, displayText) {
+  selectedIdInput.value = id;
+  selectedText.textContent = displayText;
+  selectedInfo.style.display = 'block';
+  searchInput.value = '';
+  dropdown.style.display = 'none';
+  searchInput.blur();
+}
+
+// Очистить выбор
+function clearSelection() {
+  selectedIdInput.value = '';
+  selectedInfo.style.display = 'none';
+  searchInput.focus();
+}
+
+// Показать все (если поле пустое)
+function showAllNomenclature() {
+  if (searchInput.value.trim().length === 0) {
+    renderDropdown(nomenclatureData.slice(0, 20)); // Показываем первые 20
+    dropdown.style.display = 'block';
+  }
+}
+
+// Закрыть дропдаун при клике вне
+document.addEventListener('click', function(e) {
+  if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+
+// === ОСТАЛЬНОЙ КОД (модалка, syncQty) ОСТАЁТСЯ БЕЗ ИЗМЕНЕНИЙ ===
+</script>
+
+</body>
+</html>

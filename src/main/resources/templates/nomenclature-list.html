@@ -105,9 +105,9 @@
 <!--                  <div class="text-xs text-muted" th:text="${nom.category?.name}">Категория</div>-->
                 </td>
                 <td th:text="${nom.mnn}">MNN</td>
-<!--                <td>-->
-<!--                  <span class="badge badge-info" th:text="${nom.atxCode}">C03CA01</span>-->
-<!--                </td>-->
+                <td>
+                  <span class="badge badge-info" th:text="${nom.atxCode}">C03CA01</span>
+                </td>
                 <td>
                   <div th:text="${nom.formOfRelease}">Таблетки</div>
                   <div class="text-xs text-muted" th:text="${nom.dosage}">200 мг</div>
@@ -139,7 +139,7 @@
             </table>
           </div>
 
-          <!-- Пагинация -->
+<!--           Пагинация -->
 <!--          <div class="pagination">-->
 <!--            <a th:if="${currentPage > 0}" th:href="@{/nomenclature(page=${currentPage-1},size=${pageSize},sort=${sortField},dir=${sortDir},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="page-btn">←</a>-->
 <!--            <th:block th:each="i : ${#numbers.sequence(0, totalPages-1)}">-->
@@ -148,9 +148,30 @@
 <!--            </th:block>-->
 <!--            <a th:if="${currentPage < totalPages-1}" th:href="@{/nomenclature(page=${currentPage+1},size=${pageSize},sort=${sortField},dir=${sortDir},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="page-btn">→</a>-->
 <!--          </div>-->
+<!--        </div>-->
+
+            <div class="pagination" th:if="${totalPages > 1}">
+
+              <a th:href="@{/nomenclature(page=${currentPage - 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${param.q}, atx=${param.atx}, category=${param.category}, flags=${param.flags})}"
+                 class="page-btn" th:if="${currentPage > 0}">←</a>
+
+              <!-- Показываем только текущую и +/- 1 страницу -->
+              <th:block th:each="i : ${#numbers.sequence(
+          currentPage > 1 ? currentPage - 1 : 0,
+          currentPage < totalPages - 2 ? currentPage + 1 : totalPages - 1)}">
+                <a th:if="${i == currentPage}" class="page-btn active" th:text="${i+1}">1</a>
+                <a th:unless="${i == currentPage}"
+                   th:href="@{/nomenclature(page=${i}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${param.q}, atx=${param.atx}, category=${param.category}, flags=${param.flags})}"
+                   class="page-btn" th:text="${i+1}">2</a>
+              </th:block>
+
+              <a th:href="@{/nomenclature(page=${currentPage + 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${param.q}, atx=${param.atx}, category=${param.category}, flags=${param.flags})}"
+                 class="page-btn" th:if="${currentPage < totalPages - 1}">→</a>
+
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   </main>
 </div>
 </body>

@@ -33,14 +33,14 @@ public class BatchDto {
     private Integer qtyReceived;
     private Integer qtyInStock;
     private String storageZone;
-    private Boolean isWrittenOff;
+    private Boolean writtenOff;
 
-    public Boolean isWrittenOff() {
-        return isWrittenOff;
+    public Boolean getWrittenOff() {
+        return writtenOff;
     }
 
     public void setWrittenOff(Boolean writtenOff) {
-        isWrittenOff = writtenOff;
+        this.writtenOff = writtenOff;
     }
 
     public Long getId() {

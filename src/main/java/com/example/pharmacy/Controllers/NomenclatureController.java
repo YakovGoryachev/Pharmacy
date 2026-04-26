@@ -3,6 +3,7 @@ package com.example.pharmacy.Controllers;
 import com.example.pharmacy.DTO.NomenclatureCategoryDto;
 import com.example.pharmacy.DTO.NomenclatureDto;
 import com.example.pharmacy.Pojo.Nomenclature;
+import com.example.pharmacy.Service.CategoryService;
 import com.example.pharmacy.Service.NomenclatureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,30 +15,44 @@ import org.springframework.web.bind.annotation.*;
 import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/nomenclature")
 public class NomenclatureController {
     private final NomenclatureService nomenclatureService;
+    private final CategoryService categoryService;
 
     @Autowired
-    public NomenclatureController(NomenclatureService nomenclatureService){
+    public NomenclatureController(NomenclatureService nomenclatureService,
+                                  CategoryService categoryService){
         this.nomenclatureService = nomenclatureService;
+        this.categoryService = categoryService;
     }
 
     @GetMapping("")
     public String listNomen(@RequestParam(required = false) String q,
             @RequestParam(required = false) String atx,
-            @RequestParam(required = false) Long catId,
+            @RequestParam(required = false) Long category, //catId
             @RequestParam(required = false) String flags,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "brandName") String sort,
+            @RequestParam(defaultValue = "desc") String dir,
             Model model){
 
-        List<NomenclatureDto> ndl = new ArrayList<>();
-        Page<Nomenclature> nl = nomenclatureService.findFilteredNomenclature(q, atx, catId, flags, page, size);
+        Page<NomenclatureDto> nlDto = nomenclatureService.findFilteredNomenclature(q, atx, category, flags, page, size);
 
-        model.addAttribute("nomenclatures", nl);
+        model.addAttribute("nomenclatures", nlDto.getContent());
+        model.addAttribute("currentPage", nlDto.getNumber());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", nlDto.getTotalPages());
+
+        model.addAttribute("sortField", sort);
+        model.addAttribute("sortDir", dir);
+
+        model.addAttribute("categories", categoryService.findAll());
+        //model.addAttribute("param", Map.of("q", q, "atx", atx, "category", category, "flags", flags)); exception
 
         return "nomenclature-list";
     }

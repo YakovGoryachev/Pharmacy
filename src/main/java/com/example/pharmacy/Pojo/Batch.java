@@ -26,7 +26,7 @@ public class Batch {
     private Integer qtyInStock;
     private String storageZone;
     @Column(nullable = true)
-    private Boolean isWrittenOff;
+    private Boolean writtenOff;
     @CreationTimestamp
     private Instant createdAt;
 
@@ -51,12 +51,12 @@ public class Batch {
         return stocks;
     }
 
-    public boolean isWrittenOff() {
-        return isWrittenOff;
+    public Boolean getWrittenOff() {
+        return writtenOff;
     }
 
-    public void setWrittenOff(boolean writtenOff) {
-        isWrittenOff = writtenOff;
+    public void setWrittenOff(Boolean writtenOff) {
+        this.writtenOff = writtenOff;
     }
 
     public LocalDate getProductionDate() {

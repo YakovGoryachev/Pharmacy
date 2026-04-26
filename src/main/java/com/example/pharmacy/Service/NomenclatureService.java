@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //todo доделать работу с листом productCategory
 
@@ -40,13 +41,14 @@ public class NomenclatureService {
         this.atcManualRepository = atcManualRepository;
     }
 
-    public Page<Nomenclature> findFilteredNomenclature(String search, String atx, Long categoryId, String filter, int page, int size){
+    public Page<NomenclatureDto> findFilteredNomenclature(String search, String atx, Long categoryId, String filter, int page, int size){
         Specification<Nomenclature> spec = NomenclatureSpecifications.hasFilters(
                 search, atx, categoryId, filter
         );
         Pageable pageable = PageRequest.of(page, size, Sort.by("brandName").descending());
 
-        return nomenclatureRepository.findAll(spec, pageable);
+        Page<Nomenclature> entityPage = nomenclatureRepository.findAll(spec, pageable);
+        return entityPage.map(this::toDto);
     }
     public void save(NomenclatureDto nmd){
         nomenclatureRepository.save(toPojo(nmd));
@@ -62,11 +64,18 @@ public class NomenclatureService {
         nomenclatureRepository.deleteById(id);
     }
 
+    public List<NomenclatureDto> searchByNameOrMnn(String query, int limit){
+        List<NomenclatureDto> entityList = nomenclatureRepository.findTopByBrandNameContainingIgnoreCaseOrMnnContainingIgnoreCase(query, query)
+                .stream().limit(limit).map(this::toDto).collect(Collectors.toList());
+        return entityList;
+    }
+
     public NomenclatureDto toDto(Nomenclature nm){
         NomenclatureDto nmd = new NomenclatureDto();
 
         nmd.setId(nm.getId());
-        nmd.setAtxId(nm.getAtcManual().getId());
+        if (nm.getAtcManual() != null)
+            nmd.setAtxId(nm.getAtcManual().getId());
         nmd.setMnn(nm.getMnn());
         nmd.setAtxCode(nm.getAtcManual().getCode());
         nmd.setBrandName(nm.getBrandName());
@@ -81,7 +90,10 @@ public class NomenclatureService {
         nmd.setMinStockLevel(nm.getMinStockLevel());
         nmd.setReceipt(nm.getReceipt());
         nmd.setNarcotic(nm.getNarcotic());
-        nmd.setPsycho(nm.getPsychotropic());
+        nmd.setPsychotropic(nm.getPsychotropic());
+
+        String displayText = nm.getBrandName() + " " + nm.getDosage().toString() + " " + nm.getDosageUnit();
+        nmd.setDisplayText(displayText);
 
         return nmd;
     }
@@ -118,7 +130,7 @@ public class NomenclatureService {
         nm.setMinStockLevel(nmd.getMinStockLevel());
         nm.setBarcode(nmd.getBarcode());
         nm.setNarcotic(nmd.getNarcotic());
-        nm.setPsychotropic(nmd.getPsycho());
+        nm.setPsychotropic(nmd.getPsychotropic());
         nm.setReceipt(nmd.getReceipt());
         nm.setPrice(nmd.getPrice());
         nm.setQuantityInPack(nmd.getQtyInPack());

@@ -22,9 +22,9 @@ public class NomenclatureDto {
         this.country = country;
         this.barcode = barcode;
         this.minStockLevel = minStockLevel;
-        this.Receipt = Receipt;
-        this.Narcotic = Narcotic;
-        this.Psycho = Psycho;
+        this.receipt = Receipt;
+        this.narcotic = Narcotic;
+        this.psychotropic = Psycho;
     }
 
     private Long id;
@@ -42,12 +42,22 @@ public class NomenclatureDto {
     private Integer price;
     private record storageConditions(){}
     private Integer minStockLevel;
-    private Boolean Receipt;
-    private Boolean Narcotic;
-    private Boolean Psycho;
+    private Boolean receipt;
+    private Boolean narcotic;
+    private Boolean psychotropic;
 
     private Long productCategoryId;
     private String productCategoryName;
+
+    private String displayText;
+
+    public String getDisplayText() {
+        return displayText;
+    }
+
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
+    }
 
     public String getDosageUnit() {
         return dosageUnit;
@@ -180,26 +190,26 @@ public class NomenclatureDto {
     }
 
     public Boolean getReceipt() {
-        return Receipt;
+        return receipt;
     }
 
     public void setReceipt(Boolean receipt) {
-        Receipt = receipt;
+        this.receipt = receipt;
     }
 
     public Boolean getNarcotic() {
-        return Narcotic;
+        return narcotic;
     }
 
     public void setNarcotic(Boolean narcotic) {
-        Narcotic = narcotic;
+        this.narcotic = narcotic;
     }
 
-    public Boolean getPsycho() {
-        return Psycho;
+    public Boolean getPsychotropic() {
+        return psychotropic;
     }
 
-    public void setPsycho(Boolean psycho) {
-        Psycho = psycho;
+    public void setPsychotropic(Boolean psychotropic) {
+        this.psychotropic = psychotropic;
     }
 }
