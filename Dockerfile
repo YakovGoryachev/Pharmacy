@@ -1,33 +1,29 @@
-# syntax=docker/dockerfile:1.6
-
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
-WORKDIR /build
-
-COPY pom.xml .
-RUN mvn -B dependency:go-offline
-
-COPY src ./src
-RUN mvn -B -DskipTests package
-
-FROM eclipse-temurin:21-jre-alpine AS runner
-
-RUN apk add --no-cache wget \
- && addgroup -S spring \
- && adduser -S spring -G spring
-
+# Сборка JAR
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-COPY --from=builder /build/target/kursovaya-*.jar app.jar
-RUN chown spring:spring app.jar
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-USER spring
+COPY src ./src
+RUN mvn clean package -DskipTests -B
 
-EXPOSE 8085
+# Запуск приложения
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
 
-ENV SPRING_PROFILES_ACTIVE=prod \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+RUN groupadd --system spring && useradd --system --gid spring spring \
+    && mkdir -p /app/uploads \
+    && chown -R spring:spring /app
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:8085/actuator/health | grep -q '"status":"UP"' || exit 1
+USER spring:spring
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pharmacy_db \
+    SPRING_DATASOURCE_USERNAME=postgres \
+    SPRING_DATASOURCE_PASSWORD=admin
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
