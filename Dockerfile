@@ -22,7 +22,7 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pharmacy_db \
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://89.223.125.238:5433/pharmacy_db \
     SPRING_DATASOURCE_USERNAME=postgres \
     SPRING_DATASOURCE_PASSWORD=admin
 
