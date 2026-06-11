@@ -14,15 +14,13 @@ import java.util.List;
 @Component
 public class NomenclatureSpecifications {
     public static Specification<Nomenclature> hasFilters(
-            String search,        // поиск по названию/МНН/штрихкоду
-            String atx,           // код АТХ
-            Long categoryId,      // ID категории
-            String flags) {       // rx, narcotic, psycho
+            String search,        
+            String atx,           
+            Long categoryId,      
+            String flags) {       
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            // 🔍 Поиск: по нескольким полям через OR
             if (search != null && !search.isBlank()) {
                 String likePattern = "%" + search.toLowerCase() + "%";
 
@@ -35,7 +33,6 @@ public class NomenclatureSpecifications {
                 Predicate byForm = criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("formOfRelease")), likePattern);
 
-                // Объединяем через OR: найдёт, если совпадёт хоть в одном поле
                 predicates.add(criteriaBuilder.or(byTradeName, byMnn, byBarcode, byForm));
             }
 
@@ -48,21 +45,16 @@ public class NomenclatureSpecifications {
             }
 
 //            if (categoryId != null && categoryId > 0) {
-//                // Если категория — это связь @ManyToOne:
 //                predicates.add(criteriaBuilder.equal(
 //                        root.get("productCategory").get("id"), categoryId));
-//                // Если просто ID в таблице:
 //                // predicates.add(criteriaBuilder.equal(root.get("productCategoryId"), categoryId));
 //            }
-            if (categoryId != null && categoryId > 0){
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.upper(
-                                root.join("nomenclatureCategories", JoinType.LEFT).get("code")
-                        ),
-                        atx.toUpperCase() + "%"));
+            if (categoryId != null && categoryId > 0) {
+                predicates.add(criteriaBuilder.equal(
+                        root.join("nomenclatureCategories", JoinType.INNER).get("id"),
+                        categoryId));
             }
 
-            // 🏷️ Фильтр по флагам (рецепт/наркотик/психотроп)
             if (flags != null && !flags.isBlank()) {
                 switch (flags) {
                     case "rx" -> predicates.add(criteriaBuilder.isTrue(root.get("receipt")));

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <form th:action="@{/batches/inventory/start}" method="post" style="margin-bottom:1rem">
+        <button type="submit" class="btn btn-primary">Начать инвентаризацию</button>
+    </form>
+    <table class="table">
+        <thead><tr><th>ID</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="s : ${sessions}">
+            <td th:text="${s.id}">id</td>
+            <td th:text="${s.status}">st</td>
+            <td th:text="${s.createdAt}">d</td>
+            <td><a th:href="@{'/batches/inventory/' + ${s.id}}">Открыть</a></td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <span>Администрирование</span> <span class="breadcrumb-sep">/</span> <span>Аптеки</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+            <h3 style="margin:0">Сеть аптек</h3>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                <a th:href="@{/admin/users}" class="btn btn-ghost btn-sm">Пользователи</a>
+                <a th:href="@{/admin/pharmacies/create}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Добавить аптеку
+                </a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Адрес</th>
+                    <th>Телефон</th>
+                    <th>Лицензия</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${pharmacies}">
+                    <td class="font-bold" th:text="${p.name}">—</td>
+                    <td>
+                        <span th:if="${p.address != null}"
+                              th:text="${(p.address.city != null ? p.address.city + ', ' : '') + (p.address.street != null ? p.address.street : '')}">—</span>
+                        <span th:if="${p.address == null}" class="text-muted">—</span>
+                    </td>
+                    <td th:text="${p.phoneNumber != null ? p.phoneNumber : '—'}">—</td>
+                    <td th:text="${p.numberLicense != null ? p.numberLicense : '—'}">—</td>
+                    <td>
+                        <span th:if="${p.active}" class="badge badge-success">Активна</span>
+                        <span th:unless="${p.active}" class="badge badge-danger">Неактивна</span>
+                    </td>
+                    <td class="row-actions">
+                        <a th:href="@{/admin/pharmacies/edit/{id}(id=${p.id})}" class="btn btn-ghost btn-sm" title="Изменить">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        <form th:action="@{/admin/pharmacies/delete/{id}(id=${p.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Удалить или деактивировать аптеку?');">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${pharmacies.isEmpty()}">
+                    <td colspan="6" class="text-center text-muted p-1">Аптеки не добавлены</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</html>

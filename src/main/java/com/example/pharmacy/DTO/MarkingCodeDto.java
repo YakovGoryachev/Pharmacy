@@ -8,8 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.Date;
 
-//todo connections
-
 public class MarkingCodeDto {
     public MarkingCodeDto(){
 

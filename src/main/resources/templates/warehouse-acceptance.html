@@ -1,279 +1,198 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Приёмка партии — АИС «ФармаСеть»</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style-uni.css">
-</head>
-<body>
-
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
-    <nav class="sidebar-nav">
-      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
-      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
-      <a class="nav-link active" href="/batches"><span class="nav-icon">📦</span> Склад и Партии</a>
-      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
-    </nav>
-    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
-  </aside>
-
-  <main class="main-area">
-    <header class="topbar">
-      <h1 class="topbar-title">Приёмка новой партии</h1>
-      <div class="topbar-actions">
-        <span class="badge badge-neutral">Зав. аптекой</span>
-        <div class="user-avatar">ИИ</div>
-      </div>
-    </header>
-
-    <div class="content-scroll">
-      <div class="container" style="max-width: 1000px;">
-
-        <div class="breadcrumb">
-          <a href="/batches">Склад</a> <span class="breadcrumb-sep">/</span> <span>Приёмка партии</span>
-        </div>
-
-        <div class="card">
-          <form th:action="@{/batches/create}" th:object="${batchCommand}" method="post">
-
-            <!-- 1. Блок выбора номенклатуры с поиском из БД -->
-            <div class="card-body">
-              <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                <i class="fas fa-capsules text-primary"></i> Выбор лекарственного средства
-              </h3>
-
-              <div class="form-group">
-                <label class="form-label">Номенклатура (Препарат)</label>
-
-                <div th:if="${nomenclatureError}" class="alert alert-danger" th:text="${nomenclatureError}"></div>
-
-<!--                 Поле поиска с автодополнением was right -->
-                <div style="position: relative;">
-<!--                  <input type="text" id="nomenclatureSearch" class="form-control"-->
-<!--                         placeholder="Начните вводить название, МНН или дозировку..."-->
-<!--                         autocomplete="off">-->
-                      <input type="text" id="nomenclatureSearch" class="form-control"
-                             th:classappend="${nomenclatureError} ? 'is-invalid'"
-                             placeholder="Начните вводить название..." autocomplete="off">
-                  <div id="nomenclatureDropdown" class="card"
-                       style="position: absolute; top: 100%; left: 0; right: 0; z-index: 100; max-height: 250px; overflow-y: auto; display: none; margin-top: 4px; box-shadow: var(--shadow-md);">
-                  </div>
-                </div>
-
-                <!-- Скрытое поле для отправки ID на сервер -->
-                <input type="hidden" th:field="*{nomenclatureId}" id="selectedNomenclatureId">
-
-                <!-- Отображение выбранного препарата -->
-                <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display: none;">
-                  Выбрано: <strong id="selectedNomenclatureText"></strong>
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding: 0 0.3rem; margin-left: 0.5rem;">✕</button>
-                </div>
-
-                <div class="form-helper">Введите минимум 2 символа для поиска. Если препарата нет — нажмите «Создать новый».</div>
-              </div>
-
-              <div class="flex gap-05 mt-1">
-                <!-- ✅ Кнопка ведёт на страницу создания номенклатуры -->
-                <a th:href="@{/nomenclature/create}" class="btn btn-secondary">
-                  <i class="fas fa-plus"></i> Создать новый препарат
-                </a>
-              </div>
-            </div>
-
-            <!-- 2. Блок данных партии -->
-            <div class="card-body" style="background: #fafbfc;">
-              <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                <i class="fas fa-barcode text-primary"></i> Информация о партии
-              </h3>
-
-              <div class="grid-2" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
-                <div class="form-group">
-                  <label class="form-label">Номер партии</label>
-                  <input type="text" th:field="*{batchNumber}" class="form-control" placeholder="Напр. P-10023" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Поставщик</label>
-                  <input type="text" th:field="*{supplier}" class="form-control" placeholder="ООО ФармаТрейд" required>
-                </div>
-
-<!--                <div class="form-group">-->
-<!--                  <label class="form-label">Дата поступления</label>-->
-<!--                  <input type="date" th:field="*{productionDate}" class="form-control" required>-->
-<!--                </div>-->
-<!--                <div class="form-group">-->
-<!--                  <label class="form-label">Срок годности</label>-->
-<!--                  <input type="date" th:field="*{expiryDate}" class="form-control" required>-->
-<!--                </div>-->
-
-                <div class="form-group">
-                  <label class="form-label">Дата поступления <span class="text-danger">*</span></label>
-                  <input type="date" th:field="*{receivedDate}" class="form-control" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Дата производства <span class="text-muted">(необязательно)</span></label>
-                  <input type="date" th:field="*{productionDate}" class="form-control">
-                  <div class="form-helper">Указывается производителем, если доступна</div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Срок годности <span class="text-danger">*</span></label>
-                  <input type="date" th:field="*{expiryDate}" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Цена закупки (за ед.)</label>
-                  <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="0.00" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Зона хранения</label>
-                  <select th:field="*{storageZone}" class="form-control" required>
-                    <option value="ROOM_TEMP">Комнатная температура</option>
-                    <option value="FRIDGE">Холодильник (2-8°C)</option>
-                    <option value="DARK">Тёмное место</option>
-                    <option value="FREEZER">Морозильная камера</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Кол-во полученных (упаковок)</label>
-                  <input type="number" th:field="*{qtyReceived}" class="form-control" id="qtyReceived" placeholder="100" required oninput="syncQty()">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Кол-во оставшихся</label>
-                  <input type="number" th:field="*{qtyInStock}" class="form-control" id="qtyRemaining" placeholder="Авто" readonly style="background: #f1f5f9;">
-                  <div class="form-helper">По умолчанию равно количеству поступления</div>
-                </div>
-              </div>
-
-              <div class="form-group mt-1">
-                <label class="form-check">
-                  <input type="checkbox" th:field="*{writtenOff}">
-                  <span>Партия списана (брак/возврат)</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- 3. Кнопки действий -->
-            <div class="card-footer" style="justify-content: space-between;">
-              <a href="/batches" class="btn btn-ghost">Отмена</a>
-              <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-check"></i> Провести приёмку
-              </button>
-            </div>
-
-          </form>
-        </div>
-      </div>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/batches}">Склад</a> <span class="breadcrumb-sep">/</span> <span>Приёмка партии</span>
     </div>
-  </main>
-</div>
-<script>
-  // === DEBOUNCE ===
-  function debounce(fn, delay) {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), delay);
-    };
-  }
 
-  // === ЭЛЕМЕНТЫ ===
-  const searchInput = document.getElementById('nomenclatureSearch');
-  const dropdown = document.getElementById('nomenclatureDropdown');
-  const selectedIdInput = document.getElementById('selectedNomenclatureId');
-  const selectedInfo = document.getElementById('selectedNomenclatureInfo');
-  const selectedText = document.getElementById('selectedNomenclatureText');
+    <div class="card" style="max-width:1000px">
+        <form th:action="@{/batches/create}" th:object="${batchCommand}" method="post">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Аптека (точка приёмки)</label>
+                    <select name="pharmacyId" class="form-control form-select" required>
+                        <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Код маркировки (Data Matrix, опционально)</label>
+                    <input type="text" name="markingCode" class="form-control" placeholder="Скан или ввод кода"/>
+                </div>
 
-  // === ПОИСК ЧЕРЕЗ API ===
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(async function() {
-      // ✅ FIX: используем searchInput.value вместо this.value
-      const query = searchInput.value.trim();
+                <h3 style="margin:1.5rem 0 1rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">
+                    <i class="fas fa-capsules text-primary"></i> Выбор товара
+                </h3>
 
-      if (query.length < 2) {
-        dropdown.style.display = 'none';
-        return;
-      }
+                <div class="form-group">
+                    <label class="form-label">Номенклатура (товар)</label>
+                    <div th:if="${nomenclatureError}" class="alert alert-danger" th:text="${nomenclatureError}"></div>
+                    <div style="position:relative">
+                        <input type="text" id="nomenclatureSearch" class="form-control"
+                               th:classappend="${nomenclatureError} ? 'is-invalid'"
+                               placeholder="Начните вводить название..." autocomplete="off"/>
+                        <div id="nomenclatureDropdown" class="card"
+                             style="position:absolute;top:100%;left:0;right:0;z-index:100;max-height:250px;overflow-y:auto;display:none;margin-top:4px;box-shadow:var(--shadow-md)"></div>
+                    </div>
+                    <input type="hidden" th:field="*{nomenclatureId}" id="selectedNomenclatureId"/>
+                    <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display:none">
+                        Выбрано: <strong id="selectedNomenclatureText"></strong>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding:0 0.3rem;margin-left:0.5rem">✕</button>
+                    </div>
+                    <div class="form-helper">Минимум 2 символа для поиска.</div>
+                </div>
+                <a th:href="@{/nomenclature/create}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-plus"></i> Создать новый товар
+                </a>
+            </div>
 
-      try {
-        const response = await fetch(`/api/nomenclature/search?query=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('Network error');
+            <div class="card-body" style="background:#fafbfc">
+                <h3 style="margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">
+                    <i class="fas fa-barcode text-primary"></i> Информация о партии
+                </h3>
+                <div class="grid-2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+                    <div class="form-group">
+                        <label class="form-label">Номер партии</label>
+                        <input type="text" th:field="*{batchNumber}" class="form-control" placeholder="P-10023" required/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Поставщик</label>
+                        <input type="text" th:field="*{supplier}" class="form-control" required/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дата поступления</label>
+                        <input type="date" th:field="*{receivedDate}" class="form-control" required/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дата производства</label>
+                        <input type="date" th:field="*{productionDate}" class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Срок годности</label>
+                        <input type="date" th:field="*{expiryDate}" class="form-control" required/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Цена, ₽</label>
+                        <input type="number" step="0.01" min="0" th:field="*{priceRubles}" class="form-control" required/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Зона хранения</label>
+                        <select th:field="*{storageZone}" class="form-control form-select" required>
+                            <option value="Зал">Зал</option>
+                            <option value="ROOM_TEMP">Комнатная температура</option>
+                            <option value="FRIDGE">Холодильник (2–8°C)</option>
+                            <option value="DARK">Тёмное место</option>
+                            <option value="FREEZER">Морозильная камера</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Кол-во полученных</label>
+                        <input type="number" th:field="*{qtyReceived}" class="form-control" id="qtyReceived" required oninput="syncQty()"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Кол-во оставшихся</label>
+                        <input type="number" th:field="*{qtyInStock}" class="form-control" id="qtyRemaining" readonly style="background:#f1f5f9"/>
+                    </div>
+                </div>
+                <div class="form-group mt-1">
+                    <label class="form-check">
+                        <input type="checkbox" th:field="*{writtenOff}"/>
+                        <span>Партия списана (брак/возврат)</span>
+                    </label>
+                </div>
+            </div>
 
-        const results = await response.json();
-        renderDropdown(results);
-      } catch (error) {
-        console.error('Search error:', error);
-        dropdown.innerHTML = '<div class="p-2 text-danger text-sm">Ошибка загрузки</div>';
-        dropdown.style.display = 'block';
-      }
-    }, 300));
-  }
+            <div class="card-footer" style="display:flex;justify-content:space-between;padding:1rem">
+                <a th:href="@{/batches}" class="btn btn-ghost">Отмена</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Провести приёмку
+                </button>
+            </div>
+        </form>
+    </div>
 
-  // === ОТРИСОВКА РЕЗУЛЬТАТОВ ===
-  function renderDropdown(items) {
-    if (!items || items.length === 0) {
-      dropdown.innerHTML = '<div class="p-2 text-muted text-sm">Ничего не найдено</div>';
-      dropdown.style.display = 'block';
-      return;
-    }
+    <script th:inline="javascript">
+        function debounce(fn, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
 
-    dropdown.innerHTML = items.map(item => `
-      <div class="p-2 cursor-pointer hover:bg-primary-light border-bottom nomenclature-item"
-           data-id="${item.id}"
-           data-text="${escapeHtml(item.displayText)}"
-           style="cursor: pointer;">
-        <div class="font-bold">${escapeHtml(item.brandName)} ${item.dosage || ''} ${item.dosageUnit}</div>
-        <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${item.formOfRelease}</div>
-      </div>
-    `).join('');
-    dropdown.style.display = 'block';
-  }
+        const searchInput = document.getElementById('nomenclatureSearch');
+        const dropdown = document.getElementById('nomenclatureDropdown');
+        const selectedIdInput = document.getElementById('selectedNomenclatureId');
+        const selectedInfo = document.getElementById('selectedNomenclatureInfo');
+        const selectedText = document.getElementById('selectedNomenclatureText');
 
-  // === ВЫБОР ПРЕПАРАТА ===
-  dropdown.addEventListener('click', function(e) {
-    const item = e.target.closest('.nomenclature-item');
-    if (!item) return;
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(async function () {
+                const query = searchInput.value.trim();
+                if (query.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                try {
+                    const response = await fetch('/api/nomenclature/search?query=' + encodeURIComponent(query));
+                    if (!response.ok) throw new Error('Network error');
+                    renderDropdown(await response.json());
+                } catch (error) {
+                    dropdown.innerHTML = '<div class="p-2 text-danger text-sm">Ошибка загрузки</div>';
+                    dropdown.style.display = 'block';
+                }
+            }, 300));
+        }
 
-    selectedIdInput.value = item.dataset.id;
-    selectedText.textContent = item.dataset.text;
-    selectedInfo.style.display = 'block';
-    searchInput.value = '';
-    dropdown.style.display = 'none';
-    searchInput.blur();
-  });
+        function renderDropdown(items) {
+            if (!items || items.length === 0) {
+                dropdown.innerHTML = '<div class="p-2 text-muted text-sm">Ничего не найдено</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            dropdown.innerHTML = items.map(item => `
+                <div class="p-2 nomenclature-item border-bottom" data-id="${item.id}" data-text="${escapeHtml(item.displayText || item.brandName)}" style="cursor:pointer">
+                    <div class="font-bold">${escapeHtml(item.brandName)} ${item.dosage || ''} ${item.dosageUnit || ''}</div>
+                    <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${escapeHtml(item.formOfRelease)}</div>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
 
-  // === ОЧИСТКА ВЫБОРА ===
-  function clearSelection() {
-    selectedIdInput.value = '';
-    selectedInfo.style.display = 'none';
-    searchInput.focus();
-  }
+        dropdown.addEventListener('click', function (e) {
+            const item = e.target.closest('.nomenclature-item');
+            if (!item) return;
+            selectedIdInput.value = item.dataset.id;
+            selectedText.textContent = item.dataset.text;
+            selectedInfo.style.display = 'block';
+            searchInput.value = '';
+            dropdown.style.display = 'none';
+        });
 
-  // === ЗАКРЫТИЕ ПРИ КЛИКЕ ВНЕ ===
-  document.addEventListener('click', function(e) {
-    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.style.display = 'none';
-    }
-  });
+        function clearSelection() {
+            selectedIdInput.value = '';
+            selectedInfo.style.display = 'none';
+            searchInput.focus();
+        }
 
-  // === ЗАЩИТА ОТ XSS ===
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
-  // === АВТО-СИНХРОНИЗАЦИЯ КОЛИЧЕСТВА ===
-  function syncQty() {
-    const received = document.getElementById('qtyReceived')?.value;
-    const remaining = document.getElementById('qtyRemaining');
-    if (remaining) remaining.value = received || '';
-  }
-</script>
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-</body>
+        function syncQty() {
+            const received = document.getElementById('qtyReceived')?.value;
+            const remaining = document.getElementById('qtyRemaining');
+            if (remaining) remaining.value = received || '';
+        }
+    </script>
+</section>
 </html>

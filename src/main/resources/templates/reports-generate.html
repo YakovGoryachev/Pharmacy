@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/reports}">Отчёты</a> <span class="breadcrumb-sep">/</span> <span>Формирование</span>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3 style="margin:0">Генерация PDF</h3></div>
+        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:1rem">
+            <form th:action="@{/reports/stock}" method="post">
+                <button type="submit" class="btn btn-primary">Остатки по партиям</button>
+            </form>
+            <form th:action="@{/reports/sales}" method="post">
+                <button type="submit" class="btn btn-primary">Продажи за 30 дней</button>
+            </form>
+            <a th:href="@{/reports}" class="btn btn-ghost">Назад</a>
+        </div>
+    </div>
+</section>
+</html>

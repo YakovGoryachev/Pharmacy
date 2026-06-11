@@ -1,40 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Создание номенклатуры — АИС «ФармаСеть»</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style-uni.css">
-</head>
-<body>
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
-    <nav class="sidebar-nav">
-      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
-      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
-      <a class="nav-link" href="/ware"><span class="nav-icon">📦</span> Склад и Партии</a>
-      <a class="nav-link active" href="/nomenclature"><span class="nav-icon">💊</span> Номенклатура</a>
-      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
-    </nav>
-    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
-  </aside>
-  <main class="main-area">
-    <header class="topbar">
-      <h1 class="topbar-title" id="pageTitle">Новое лекарственное средство</h1>
-      <div class="topbar-actions">
-        <span class="badge badge-neutral">Зав. аптекой</span>
-        <div class="user-avatar">ИИ</div>
-      </div>
-    </header>
-    <div class="content-scroll">
-      <div class="container" style="max-width:1100px;">
-        <div class="breadcrumb">
-          <a href="/nomenclature">Номенклатура</a> <span class="breadcrumb-sep">/</span> <span id="bcText">Создание</span>
-        </div>
-        <div class="card">
-          <form th:action="@{/nomenclature/save}" th:object="${nomCommand}" method="post" id="nomForm">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/nomenclature}">Номенклатура</a> <span class="breadcrumb-sep">/</span>
+        <span th:text="${nomCommand.id != null} ? 'Редактирование' : 'Создание'">Форма</span>
+    </div>
+    <div class="card" style="max-width:1100px">
+          <form th:action="@{/nomenclature/save/close}" th:object="${nomCommand}" method="post" id="nomForm">
             <!-- Скрытое поле ID (для редактирования) -->
             <input type="hidden" th:field="*{id}">
 
@@ -45,19 +18,25 @@
               </h3>
               <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
                 <div class="form-group">
-                  <label class="form-label">Код АТХ <span class="text-danger">*</span></label>
-                  <input type="text" id="atxSearchInput" th:field="*{atxCode}" class="form-control" placeholder="Введите код, напр. C03CA01" required>
+                  <label class="form-label">Тип товара <span class="text-danger">*</span></label>
+                  <select th:field="*{productType}" id="productTypeSelect" class="form-control form-select" required>
+                    <option th:each="pt : ${productTypes}" th:value="${pt.name()}" th:text="${pt.label}"></option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Торговая марка <span class="text-danger">*</span></label>
+                  <input type="text" th:field="*{brandName}" class="form-control" placeholder="Название на ценнике" required>
+                </div>
+                <div class="form-group" id="medicineFields">
+                  <label class="form-label">Код АТХ <span class="text-danger medicine-req">*</span></label>
+                  <input type="text" id="atxSearchInput" th:field="*{atxCode}" class="form-control" placeholder="Введите код, напр. C03CA01">
                   <input type="hidden" id="selectedAtxId" name="atxId" th:field="*{atxId}">
                   <div id="atxDropdown" class="card" style="position:absolute;z-index:100;max-height:200px;overflow-y:auto;display:none;margin-top:4px;box-shadow:var(--shadow-md);"></div>
                   <div class="form-helper" id="atxHint">Введите минимум 2 символа для поиска по справочнику АТХ</div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">МНН <span class="text-danger">*</span></label>
-                  <input type="text" th:field="*{mnn}" class="form-control" placeholder="Международное непатентованное, напр. Ibuprofen" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Торговая марка <span class="text-danger">*</span></label>
-                  <input type="text" th:field="*{brandName}" class="form-control" placeholder="Торговое название, напр. Нурофен Экспресс" required>
+                <div class="form-group" id="mnnField">
+                  <label class="form-label">МНН <span class="text-danger medicine-req">*</span></label>
+                  <input type="text" id="mnnInput" th:field="*{mnn}" class="form-control" placeholder="Международное непатентованное, напр. Ibuprofen">
                 </div>
 
 <!--                категория-->
@@ -83,14 +62,15 @@
             </div>
 
             <!-- Секция 2: Характеристики -->
-            <div class="card-body" style="background:#fafbfc;">
-              <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
+            <div class="card-body" style="background:#fafbfc;" id="specsSection">
+              <h3 id="specsTitle" style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
                 <i class="fas fa-pills text-primary"></i> Характеристики препарата
               </h3>
               <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
-                <div class="form-group">
+                <input type="hidden" th:field="*{formOfRelease}" id="formOfReleaseHidden"/>
+                <div class="form-group" id="medicineFormField">
                   <label class="form-label">Форма выпуска</label>
-                  <select th:field="*{formOfRelease}" class="form-control">
+                  <select id="medicineFormSelect" class="form-control form-select">
                     <option value="">-- Выберите --</option>
                     <option value="TABLET">Таблетки</option>
                     <option value="CAPSULE">Капсулы</option>
@@ -101,6 +81,18 @@
                     <option value="SPRAY">Спрей</option>
                     <option value="POWDER">Порошок</option>
                     <option value="INJECTION">Раствор для инъекций</option>
+                  </select>
+                </div>
+                <div class="form-group" id="goodsFormField" style="display:none">
+                  <label class="form-label">Единица / фасовка</label>
+                  <select id="goodsFormSelect" class="form-control form-select">
+                    <option value="">-- Выберите --</option>
+                    <option value="PIECE">Штука</option>
+                    <option value="PACK">Упаковка</option>
+                    <option value="BOTTLE">Флакон / бутылка</option>
+                    <option value="TUBE">Туба</option>
+                    <option value="BOX">Коробка</option>
+                    <option value="SET">Набор</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -147,36 +139,30 @@
               </div>
             </div>
 
-            <!-- Секция 3: Цены и контроль -->
+            <!-- Секция 3: Контроль остатков -->
             <div class="card-body">
               <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
-                <i class="fas fa-coins text-primary"></i> Цены и контроль остатков
+                <i class="fas fa-boxes text-primary"></i> Контроль остатков
               </h3>
-              <div class="grid-2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
-                <div class="form-group">
-                  <label class="form-label">Розничная цена</label>
-                  <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="0.00">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Мин. остаток (порог предупреждения)</label>
-                  <input type="number" th:field="*{minStockLevel}" class="form-control" placeholder="При остатке ниже — предупреждение" min="0">
-                  <div class="form-helper">Система предупредит при падении ниже этого значения</div>
-                </div>
+              <div class="form-group" style="max-width:24rem;">
+                <label class="form-label">Мин. остаток (порог предупреждения)</label>
+                <input type="number" th:field="*{minStockLevel}" class="form-control" placeholder="При остатке ниже — предупреждение" min="0">
+                <div class="form-helper">Цена задаётся при приёмке партии. Система предупредит при падении остатка ниже порога.</div>
               </div>
             </div>
 
             <!-- Секция 4: Особые флаги -->
-            <div class="card-body" style="background:#fafbfc;">
+            <div class="card-body" style="background:#fafbfc;" id="medicineFlags">
               <h3 style="margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem;">
-                <i class="fas fa-exclamation-triangle text-warning"></i> Особые условия отпуска
+                <i class="fas fa-exclamation-triangle text-warning"></i> Особые условия отпуска (только ЛС)
               </h3>
               <div class="flex flex-wrap gap-1">
                 <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
-                  <input type="checkbox" th:field="*{receipt}">
+                  <input type="checkbox" th:field="*{Receipt}">
                   <span>📋 Отпуск по рецепту</span>
                 </label>
                 <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
-                  <input type="checkbox" th:field="*{narcotic}">
+                  <input type="checkbox" th:field="*{Narcotic}">
                   <span>⚠️ Наркотическое средство</span>
                 </label>
                 <label class="form-check card p-1" style="cursor:pointer;flex:1;min-width:200px;">
@@ -192,35 +178,33 @@
                 <i class="fas fa-qrcode text-primary"></i> Маркировка «Честный ЗНАК»
               </h3>
               <div class="form-group">
-                <label class="form-label">Код маркировки Data Matrix</label>
-<!--                <textarea th:field="*{dataMatrixCodes}" class="form-control" rows="3" placeholder="Каждый код с новой строки (для серийного учёта)"></textarea>-->
-                <div class="form-helper">Если препарат подлежит обязательной маркировке. Введите серийные GTIN или оставьте пустым для ручного сканирования при продаже.</div>
+                <label class="form-check">
+                  <input type="checkbox" th:field="*{marked}"/>
+                  <span>Товар подлежит маркировке «Честный ЗНАК»</span>
+                </label>
+                <div class="form-helper">При продаже потребуется сканирование Data Matrix на кассе.</div>
               </div>
             </div>
 
             <!-- Кнопки действий -->
             <div class="card-footer" style="justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
-              <a href="/nomenclature" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> К списку</a>
+              <a th:href="@{/nomenclature}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> К списку</a>
               <div class="flex gap-05">
                 <!-- Записать и закрыть — возврат на предыдущую страницу (или на список) -->
                 <button type="submit" class="btn btn-secondary" th:formaction="@{/nomenclature/save/close}">
                   <i class="fas fa-save"></i> Записать и закрыть
                 </button>
                 <!-- Записать и продолжить — очистка формы для новой записи -->
-                <button type="submit" class="btn btn-primary" th:formaction="@{/nomenclature/save/continue}">
-                  <i class="fas fa-plus"></i> Записать и продолжить
-                </button>
+<!--                <button type="submit" class="btn btn-primary" th:formaction="@{/nomenclature/save/continue}">-->
+<!--                  <i class="fas fa-plus"></i> Записать и продолжить-->
+<!--                </button>-->
               </div>
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  </main>
 </div>
 
 <script>
-  // Debounce функция (чтобы не слать запрос на каждый символ)
  function debounce(func, wait) {
      let timeout;
      return function executedFunction(...args) {
@@ -233,17 +217,12 @@
      };
  }
 
- // Поиск ATX
 const atxInput = document.getElementById('atxSearchInput');
 const atxDropdown = document.getElementById('atxDropdown');
 const selectedAtxId = document.getElementById('selectedAtxId');
 
-// Проверка: если элементов нет на странице — выходим
-// (чтобы скрипт не падал на других страницах, где нет поля ATX)
 if (atxInput && atxDropdown) {
-    // Обработчик ввода с задержкой 300ms
   atxInput.addEventListener('input', debounce(async function() {
-      // ✅ ИСПРАВЛЕНИЕ: используем atxInput.value вместо this.value
       const query = atxInput.value.trim();
 
       if (query.length < 2) {
@@ -261,7 +240,6 @@ if (atxInput && atxDropdown) {
               return;
           }
 
-          // Формируем HTML результатов
           atxDropdown.innerHTML = results.map(atx => `
               <div class="p-2 cursor-pointer hover:bg-primary-light border-bottom"
                    onclick="selectAtx('${atx.code}', '${atx.name}', ${atx.id})"
@@ -280,40 +258,32 @@ if (atxInput && atxDropdown) {
 }
 
 
- // Выбор ATX из списка
  function selectAtx(code, name, id) {
      document.getElementById('atxSearchInput').value = code;
      selectedAtxId.value = id;
      atxDropdown.style.display = 'none';
  }
 
- // Закрыть dropdown при клике вне
  document.addEventListener('click', function(e) {
      if (!atxInput.contains(e.target) && !atxDropdown.contains(e.target)) {
          atxDropdown.style.display = 'none';
      }
  });
 
-   // === Кнопки сохранения ===
    function saveAndClose(){
-     // В проде: form.submit() с redirect на /ware или реферер
-     document.getElementById('nomForm').action='/nomenclature/save';
-     document.getElementById('nomForm').submit();
+     const form = document.getElementById('nomForm');
+     form.action = '/nomenclature/save/close';
+     form.submit();
    }
 
    function saveAndContinue(){
-     // В проде: AJAX submit, затем очистка формы
      const form=document.getElementById('nomForm');
-     // Демо: просто очистка
      form.reset();
      document.querySelector('input[name="id"]').value='';
      document.getElementById('atxHint').textContent='Введите минимум 2 символа для поиска по справочнику АТХ';
      alert('Запись сохранена. Форма очищена для нового ввода.');
    }
 
-  // ==========================================
-// 📦 2. АВТОКОМПЛИТ КАТЕГОРИЙ (вставляет НАЗВАНИЕ)
-// ==========================================
 const catInput = document.getElementById('catInput');
 const catDrop = document.getElementById('catDrop');
 const catHidden = document.getElementById('catHiddenId');
@@ -323,7 +293,7 @@ const catNewSpan = document.getElementById('catNewName');
 if (catInput && catDrop && catHidden) {
     catInput.addEventListener('input', debounce(async () => {
         const q = catInput.value.trim();
-        catHidden.value = ''; // Сброс ID при ручном изменении
+        catHidden.value = '';
         if (q.length < 2) { catDrop.style.display = 'none'; catHint.style.display = 'none'; return; }
 
         try {
@@ -347,7 +317,6 @@ if (catInput && catDrop && catHidden) {
         } catch(e) { console.error('Cat Error:', e); }
     }, 300));
 
-    // Клик по найденной категории
     catDrop.addEventListener('click', e => {
         const row = e.target.closest('.dropdown-item');
         if (!row) return;
@@ -357,12 +326,11 @@ if (catInput && catDrop && catHidden) {
         catHint.style.display = 'none';
     });
 
-    // Клик по "Создать новую"
     catHint.addEventListener('click', async () => {
         const name = catNewSpan.textContent;
         if (!name) return;
         try {
-            const res = await fetch('/api/categories/create', {
+            const res = await csrfFetch('/api/categories/create', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({name})
@@ -377,9 +345,6 @@ if (catInput && catDrop && catHidden) {
     });
 }
 
-// ==========================================
-// 🖱 ЗАКРЫТИЕ ВЫПАДАЮЩИХ СПИСКОВ ПРИ КЛИКЕ ВНЕ
-// ==========================================
 document.addEventListener('click', e => {
     if (atxDropdown && !atxInput.contains(e.target) && !atxDropdown.contains(e.target)) atxDropdown.style.display = 'none';
     if (catDrop && !catInput.contains(e.target) && !catDrop.contains(e.target) && !catHint.contains(e.target)) {
@@ -388,6 +353,73 @@ document.addEventListener('click', e => {
     }
 });
 
+(function () {
+    const unitsByForm = {
+        TABLET: 'мг', CAPSULE: 'мг', SOLUTION: 'мл', OINTMENT: '%',
+        SYRUP: 'мл', DROPS: 'мл', SPRAY: 'мл', POWDER: 'г', INJECTION: 'мл'
+    };
+    const formSelect = document.getElementById('medicineFormSelect');
+    const unitSelect = document.querySelector('select[name="dosageUnit"]');
+    if (formSelect && unitSelect) {
+        formSelect.addEventListener('change', () => {
+            const unit = unitsByForm[formSelect.value];
+            if (unit) unitSelect.value = unit;
+        });
+    }
+})();
+
+(function () {
+    const typeSelect = document.getElementById('productTypeSelect');
+    const medicineFields = document.getElementById('medicineFields');
+    const mnnField = document.getElementById('mnnField');
+    const medicineFlags = document.getElementById('medicineFlags');
+    const medicineFormField = document.getElementById('medicineFormField');
+    const goodsFormField = document.getElementById('goodsFormField');
+    const medicineFormSelect = document.getElementById('medicineFormSelect');
+    const goodsFormSelect = document.getElementById('goodsFormSelect');
+    const hiddenFormRelease = document.getElementById('formOfReleaseHidden');
+    const atxInput = document.getElementById('atxSearchInput');
+    const mnnInput = document.getElementById('mnnInput');
+    const specsTitle = document.getElementById('specsTitle');
+
+    function syncProductType() {
+        const isMedicine = typeSelect.value === 'MEDICINE';
+        medicineFields.style.display = isMedicine ? '' : 'none';
+        mnnField.style.display = isMedicine ? '' : 'none';
+        medicineFlags.style.display = isMedicine ? '' : 'none';
+        medicineFormField.style.display = isMedicine ? '' : 'none';
+        goodsFormField.style.display = isMedicine ? 'none' : '';
+        if (atxInput) atxInput.required = isMedicine;
+        if (mnnInput) mnnInput.required = isMedicine;
+        specsTitle.innerHTML = isMedicine
+            ? '<i class="fas fa-pills text-primary"></i> Характеристики препарата'
+            : '<i class="fas fa-box text-primary"></i> Характеристики товара';
+        if (hiddenFormRelease) {
+            if (isMedicine) {
+                hiddenFormRelease.value = medicineFormSelect.value;
+            } else {
+                hiddenFormRelease.value = goodsFormSelect.value;
+            }
+        }
+    }
+
+    if (typeSelect) {
+        const current = hiddenFormRelease ? hiddenFormRelease.value : '';
+        if (medicineFormSelect && current) medicineFormSelect.value = current;
+        if (goodsFormSelect && current && ['PIECE','PACK','BOTTLE','TUBE','BOX','SET'].includes(current)) {
+            goodsFormSelect.value = current;
+        }
+        medicineFormSelect?.addEventListener('change', () => {
+            if (hiddenFormRelease) hiddenFormRelease.value = medicineFormSelect.value;
+        });
+        goodsFormSelect?.addEventListener('change', () => {
+            if (hiddenFormRelease) hiddenFormRelease.value = goodsFormSelect.value;
+        });
+        typeSelect.addEventListener('change', syncProductType);
+        syncProductType();
+    }
+})();
+
 </script>
-</body>
+</section>
 </html>

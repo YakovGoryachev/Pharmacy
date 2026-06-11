@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div style="margin-bottom:1rem">
+        <a th:href="@{/batches/expiring(days=30)}" class="btn btn-sm">30 дн.</a>
+        <a th:href="@{/batches/expiring(days=60)}" class="btn btn-sm">60 дн.</a>
+        <a th:href="@{/batches/expiring(days=90)}" class="btn btn-sm">90 дн.</a>
+    </div>
+    <p th:if="${networkView}" class="text-muted" style="margin-bottom:1rem">
+        Обзор по всей аптечной сети
+    </p>
+    <table class="table">
+        <thead>
+        <tr>
+            <th th:if="${networkView}">Аптека</th>
+            <th>Препарат</th>
+            <th>Партия</th>
+            <th>Годен до</th>
+            <th>Остаток</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${stocks}">
+            <td th:if="${networkView}" th:text="${s.pharmacy.name}">p</td>
+            <td th:text="${s.batch.nomenclature.brandName}">n</td>
+            <td th:text="${s.batch.batchNumber}">b</td>
+            <td th:text="${s.batch.expiryDate}">e</td>
+            <td th:text="${s.quantity}">q</td>
+        </tr>
+        <tr th:if="${stocks.isEmpty()}">
+            <td th:colspan="${networkView} ? 5 : 4" class="text-center text-muted">Нет партий с критическим сроком</td>
+        </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/batches}" class="btn btn-secondary">Назад</a>
+</section>
+</html>

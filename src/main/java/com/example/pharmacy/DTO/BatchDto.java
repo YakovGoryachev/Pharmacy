@@ -1,6 +1,6 @@
 package com.example.pharmacy.DTO;
 
-//todo connections
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -25,11 +25,16 @@ public class BatchDto {
     private Long id;
     private Long nomenclatureId;
     private String batchNumber;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expiryDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate productionDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate receivedDate;
     private String supplier;
     private Integer price;
+    /** Цена в рублях для HTML-форм. */
+    private Double priceRubles;
     private Integer qtyReceived;
     private Integer qtyInStock;
     private String storageZone;
@@ -73,6 +78,14 @@ public class BatchDto {
 
     public void setPrice(Integer price) {
         this.price = price;
+    }
+
+    public Double getPriceRubles() {
+        return priceRubles;
+    }
+
+    public void setPriceRubles(Double priceRubles) {
+        this.priceRubles = priceRubles;
     }
 
     public Integer getQtyReceived() {

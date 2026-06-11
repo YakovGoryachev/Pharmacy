@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/reports}">Отчёты</a> <span class="breadcrumb-sep">/</span> <span>История</span>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <div class="card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0">Сформированные отчёты</h3>
+            <a th:href="@{/reports}" class="btn btn-secondary btn-sm">← К отчётам</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                <tr><th>Тип</th><th>Дата</th><th>Файл</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${reports}">
+                    <td th:text="${r.reportType}">t</td>
+                    <td th:text="${#temporals.format(r.generatedAt, 'dd.MM.yyyy HH:mm')}">d</td>
+                    <td><a th:href="@{/reports/file(path=${r.filePath})}" class="btn btn-sm btn-ghost">Скачать PDF</a></td>
+                </tr>
+                <tr th:if="${reports.isEmpty()}">
+                    <td colspan="3" class="text-center text-muted p-1">Отчётов пока нет. Сформируйте на странице «Отчёты».</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</html>

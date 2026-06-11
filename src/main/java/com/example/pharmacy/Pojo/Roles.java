@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.List;
 
-//todo constraints
 
 @Entity
 @Table(name="roles")

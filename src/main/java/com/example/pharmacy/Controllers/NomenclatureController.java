@@ -2,7 +2,7 @@ package com.example.pharmacy.Controllers;
 
 import com.example.pharmacy.DTO.NomenclatureCategoryDto;
 import com.example.pharmacy.DTO.NomenclatureDto;
-import com.example.pharmacy.Pojo.Nomenclature;
+import com.example.pharmacy.Pojo.ProductType;
 import com.example.pharmacy.Service.CategoryService;
 import com.example.pharmacy.Service.NomenclatureService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class NomenclatureController {
             @RequestParam(defaultValue = "desc") String dir,
             Model model){
 
-        Page<NomenclatureDto> nlDto = nomenclatureService.findFilteredNomenclature(q, atx, category, flags, page, size);
+        Page<NomenclatureDto> nlDto = nomenclatureService.findFilteredNomenclature(q, atx, category, flags, page, size, sort, dir);
 
         model.addAttribute("nomenclatures", nlDto.getContent());
         model.addAttribute("currentPage", nlDto.getNumber());
@@ -52,7 +52,9 @@ public class NomenclatureController {
         model.addAttribute("sortDir", dir);
 
         model.addAttribute("categories", categoryService.findAll());
-        //model.addAttribute("param", Map.of("q", q, "atx", atx, "category", category, "flags", flags)); exception
+        model.addAttribute("pageTitle", "Справочник номенклатуры");
+        model.addAttribute("activeNav", "nomenclature");
+        model.addAttribute("productTypes", ProductType.values());
 
         return "nomenclature-list";
     }
@@ -60,8 +62,13 @@ public class NomenclatureController {
 
     @GetMapping("/create")
     public String addNomenclature(Model model){
-        model.addAttribute("nomCommand", new NomenclatureDto());
-        model.addAttribute("categories", new NomenclatureCategoryDto());
+        NomenclatureDto dto = new NomenclatureDto();
+        dto.setProductType(ProductType.MEDICINE.name());
+        model.addAttribute("nomCommand", dto);
+        model.addAttribute("allCategories", categoryService.findAll());
+        model.addAttribute("pageTitle", "Новая номенклатура");
+        model.addAttribute("activeNav", "nomenclature");
+        model.addAttribute("productTypes", ProductType.values());
         return "nomenclature-create";
     }
 
@@ -81,7 +88,10 @@ public class NomenclatureController {
     public String edit(@PathVariable Long id, Model model){
         NomenclatureDto ndto = nomenclatureService.findById(id);
         model.addAttribute("nomCommand", ndto);
-        model.addAttribute("categories", new NomenclatureCategoryDto());
+        model.addAttribute("allCategories", categoryService.findAll());
+        model.addAttribute("pageTitle", "Редактирование номенклатуры");
+        model.addAttribute("activeNav", "nomenclature");
+        model.addAttribute("productTypes", ProductType.values());
         return "nomenclature-edit";
     }
     @GetMapping("/delete/{id}")

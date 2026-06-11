@@ -7,8 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-//todo connections, JSON(record)
-
 public class RequestReportDto {
     public RequestReportDto(){
 

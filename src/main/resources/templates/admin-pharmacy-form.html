@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/admin/pharmacies}">Аптеки</a> <span class="breadcrumb-sep">/</span>
+        <span th:text="${pharmacy.id != null} ? 'Редактирование' : 'Новая аптека'">Форма</span>
+    </div>
+
+    <div class="card" style="max-width:720px">
+        <form th:action="@{/admin/pharmacies/save}" method="post" th:object="${pharmacy}">
+            <input type="hidden" th:field="*{id}" th:if="${pharmacy.id != null}"/>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Название</label>
+                    <input type="text" th:field="*{name}" class="form-control" required placeholder="Аптека №1 Центральная"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Телефон</label>
+                    <input type="text" th:field="*{phoneNumber}" class="form-control" placeholder="+78334560001"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" th:field="*{email}" class="form-control" placeholder="apteka@example.ru"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Номер лицензии</label>
+                    <input type="number" th:field="*{numberLicense}" class="form-control" min="0" step="1"/>
+                </div>
+                <label class="form-check" style="margin-bottom:1rem">
+                    <input type="checkbox" th:field="*{active}"/>
+                    <span>Аптека активна</span>
+                </label>
+
+                <h4 style="margin:1rem 0 0.75rem;font-size:1rem">Адрес</h4>
+                <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+                    <div class="form-group">
+                        <label class="form-label">Страна</label>
+                        <input type="text" th:field="*{address.country}" class="form-control" placeholder="Россия"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Город</label>
+                        <input type="text" th:field="*{address.city}" class="form-control" placeholder="Муром"/>
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1">
+                        <label class="form-label">Улица</label>
+                        <input type="text" th:field="*{address.street}" class="form-control" placeholder="ул. Ленина, 1"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дом</label>
+                        <input type="text" th:field="*{address.houseNumber}" class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Квартира / офис</label>
+                        <input type="text" th:field="*{address.apartment}" class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Индекс</label>
+                        <input type="text" th:field="*{address.zipCode}" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display:flex;gap:0.5rem;padding:1rem">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a th:href="@{/admin/pharmacies}" class="btn btn-ghost">Отмена</a>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

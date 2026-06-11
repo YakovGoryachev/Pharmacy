@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(pageTitle, activeNav, content)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pageTitle} + ' — АИС «ФармаСеть»'">АИС «ФармаСеть»</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style-uni.css}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
+        <nav class="sidebar-nav">
+            <a class="nav-link" th:href="@{/dashboard}"
+               sec:authorize="hasAnyRole('PHARMACIST','MANAGER','ADMIN','ACCOUNTANT','TEST')"
+               th:classappend="${activeNav == 'dashboard'} ? ' active' : ''">
+                <span class="nav-icon">📊</span> Дашборд
+            </a>
+            <a class="nav-link" th:href="@{/cashier}"
+               sec:authorize="hasAnyRole('PHARMACIST','TEST')"
+               th:classappend="${activeNav == 'cashier'} ? ' active' : ''">
+                <span class="nav-icon">🛒</span> АРМ Кассира
+            </a>
+            <a class="nav-link" th:href="@{/batches}"
+               sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')"
+               th:classappend="${activeNav == 'batches'} ? ' active' : ''">
+                <span class="nav-icon">📦</span> Склад и Партии
+            </a>
+            <a class="nav-link" th:href="@{/nomenclature}"
+               sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')"
+               th:classappend="${activeNav == 'nomenclature'} ? ' active' : ''">
+                <span class="nav-icon">💊</span> Номенклатура
+            </a>
+            <a class="nav-link" th:href="@{/reports}"
+               sec:authorize="hasAnyRole('MANAGER','ADMIN','ACCOUNTANT','TEST')"
+               th:classappend="${activeNav == 'reports'} ? ' active' : ''">
+                <span class="nav-icon">📈</span> Отчёты
+            </a>
+            <a class="nav-link" th:href="@{/admin/pharmacies}"
+               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               th:classappend="${activeNav == 'pharmacies'} ? ' active' : ''">
+                <span class="nav-icon">🏥</span> Аптеки
+            </a>
+            <a class="nav-link" th:href="@{/admin/users}"
+               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               th:classappend="${activeNav == 'admin'} ? ' active' : ''">
+                <span class="nav-icon">👤</span> Пользователи
+            </a>
+            <a class="nav-link" th:href="@{/admin/audit}"
+               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               th:classappend="${activeNav == 'audit'} ? ' active' : ''">
+                <span class="nav-icon">🔐</span> Аудит
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div sec:authentication="name">user</div>
+            <form th:action="@{/logout}" method="post" style="margin-top:0.5rem">
+                <button type="submit" class="btn btn-sm btn-secondary">Выход</button>
+            </form>
+            <div style="margin-top:0.75rem;font-size:0.75rem;opacity:0.7">© 2026 МИ ВлГУ ПИН-122</div>
+        </div>
+    </aside>
+    <main class="main-area">
+        <header class="topbar">
+            <h1 class="topbar-title" th:text="${pageTitle}">Страница</h1>
+            <div class="topbar-actions">
+                <span class="badge badge-info" sec:authorize="hasRole('TEST')">Тест: все разделы</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('PHARMACIST')">Первостольник</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('MANAGER')">Заведующий</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('ADMIN')">Администратор</span>
+                <div class="account-menu" sec:authorize="isAuthenticated()" tabindex="0">
+                    <button type="button" class="user-avatar account-trigger" th:text="${userInitials}">U</button>
+                    <div class="account-dropdown">
+                        <div class="account-dropdown-header">
+                            <strong th:text="${currentUserName}">Пользователь</strong>
+                            <span class="text-sm text-muted" th:text="|@${currentUserLogin}|">login</span>
+                        </div>
+                        <div class="account-dropdown-body">
+                            <div class="account-row">
+                                <span class="account-label">Роль</span>
+                                <span th:text="${currentUserRole}">—</span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-label">Аптека</span>
+                                <span th:text="${currentUserPharmacy}">—</span>
+                            </div>
+                        </div>
+                        <form th:action="@{/logout}" method="post" class="account-dropdown-footer">
+                            <button type="submit" class="btn btn-sm btn-secondary btn-block">Выйти</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="content-scroll">
+            <div class="container" style="max-width:1400px;">
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                <div th:replace="${content}">content</div>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    window.csrfFetch = function (url, options) {
+        options = options || {};
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+        const headers = Object.assign({}, options.headers || {});
+        if (token && header) {
+            headers[header] = token;
+        }
+        return fetch(url, Object.assign({credentials: 'same-origin'}, options, {headers: headers}));
+    };
+
+    document.querySelectorAll('.account-trigger').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = btn.closest('.account-menu');
+            menu.classList.toggle('account-open');
+        });
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.account-menu.account-open').forEach(m => m.classList.remove('account-open'));
+    });
+</script>
+</body>
+</html>

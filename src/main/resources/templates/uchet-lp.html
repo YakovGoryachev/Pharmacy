@@ -178,7 +178,9 @@
     .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tr:hover td { background: #f9fafb; }
-    .data-table .actions-cell { display: flex; gap: 0.3rem; }
+    .data-table td.actions-cell { white-space: nowrap; }
+    .data-table td.actions-cell > * { display: inline-flex; align-items: center; vertical-align: middle; }
+    .data-table td.actions-cell > * + * { margin-left: 0.3rem; }
 
     .pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
     .page-btn { padding: 0.4rem 0.8rem; border: 1px solid var(--border); background: var(--bg-surface); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); }

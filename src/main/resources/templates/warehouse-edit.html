@@ -1,44 +1,15 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Приёмка партии — АИС «ФармаСеть»</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style-uni.css">
-</head>
-<body>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/batches}">Склад</a> <span class="breadcrumb-sep">/</span>
+        <span>Редактирование партии <span th:text="${batchCommand.batchNumber}"></span></span>
+    </div>
 
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
-    <nav class="sidebar-nav">
-      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Дашборд</a>
-      <a class="nav-link" href="/pos"><span class="nav-icon">🛒</span> АРМ Кассира</a>
-      <a class="nav-link active" href="/batches"><span class="nav-icon">📦</span> Склад и Партии</a>
-      <a class="nav-link" href="/reports"><span class="nav-icon">📈</span> Отчёты</a>
-    </nav>
-    <div class="sidebar-footer">© 2026 МИ ВлГУ ПИН-122</div>
-  </aside>
-
-  <main class="main-area">
-    <header class="topbar">
-      <h1 class="topbar-title">Приёмка новой партии</h1>
-      <div class="topbar-actions">
-        <span class="badge badge-neutral">Зав. аптекой</span>
-        <div class="user-avatar">ИИ</div>
-      </div>
-    </header>
-
-    <div class="content-scroll">
-      <div class="container" style="max-width: 1000px;">
-
-        <div class="breadcrumb">
-          <a href="/batches">Склад</a> <span class="breadcrumb-sep">/</span> <span>Приёмка партии</span>
-        </div>
-
-        <div class="card">
-          <form th:action="@{/batches/create}" th:object="${batchCommand}" method="post">
+    <div class="card" style="max-width:1000px">
+          <form th:action="@{/batches/update/{id}(id=${batchCommand.id})}" th:object="${batchCommand}" method="post">
+            <input type="hidden" th:field="*{id}">
 
             <!-- 1. Блок выбора номенклатуры с поиском из БД -->
             <div class="card-body">
@@ -68,8 +39,13 @@
                 <input type="hidden" th:field="*{nomenclatureId}" id="selectedNomenclatureId">
 
                 <!-- Отображение выбранного препарата -->
-                <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display: none;">
-                  Выбрано: <strong id="selectedNomenclatureText"></strong>
+<!--                <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display: none;">-->
+<!--                  Выбрано: <strong id="selectedNomenclatureText"></strong>-->
+<!--                  <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding: 0 0.3rem; margin-left: 0.5rem;">✕</button>-->
+<!--                </div>-->
+                <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted"
+                     th:style="${hasSelectedNomenclature} ? 'display: block;' : 'display: none;'">
+                  Выбрано: <strong id="selectedNomenclatureText" th:text="${selectedNomenclatureText}"></strong>
                   <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding: 0 0.3rem; margin-left: 0.5rem;">✕</button>
                 </div>
 
@@ -124,8 +100,8 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Цена закупки (за ед.)</label>
-                  <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="0.00" required>
+                  <label class="form-label">Цена, ₽</label>
+                  <input type="number" step="0.01" min="0" th:field="*{priceRubles}" class="form-control" placeholder="85.00" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Зона хранения</label>
@@ -157,21 +133,16 @@
             </div>
 
             <!-- 3. Кнопки действий -->
-            <div class="card-footer" style="justify-content: space-between;">
-              <a href="/batches" class="btn btn-ghost">Отмена</a>
-              <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-check"></i> Провести приёмку
+            <div class="card-footer" style="display:flex;justify-content:space-between;padding:1rem">
+              <a th:href="@{/batches}" class="btn btn-ghost">Отмена</a>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Сохранить
               </button>
             </div>
 
           </form>
-        </div>
-      </div>
     </div>
-  </main>
-</div>
 <script>
-  // === DEBOUNCE ===
   function debounce(fn, delay) {
     let timer;
     return (...args) => {
@@ -180,17 +151,14 @@
     };
   }
 
-  // === ЭЛЕМЕНТЫ ===
   const searchInput = document.getElementById('nomenclatureSearch');
   const dropdown = document.getElementById('nomenclatureDropdown');
   const selectedIdInput = document.getElementById('selectedNomenclatureId');
   const selectedInfo = document.getElementById('selectedNomenclatureInfo');
   const selectedText = document.getElementById('selectedNomenclatureText');
 
-  // === ПОИСК ЧЕРЕЗ API ===
   if (searchInput) {
     searchInput.addEventListener('input', debounce(async function() {
-      // ✅ FIX: используем searchInput.value вместо this.value
       const query = searchInput.value.trim();
 
       if (query.length < 2) {
@@ -212,7 +180,6 @@
     }, 300));
   }
 
-  // === ОТРИСОВКА РЕЗУЛЬТАТОВ ===
   function renderDropdown(items) {
     if (!items || items.length === 0) {
       dropdown.innerHTML = '<div class="p-2 text-muted text-sm">Ничего не найдено</div>';
@@ -232,7 +199,6 @@
     dropdown.style.display = 'block';
   }
 
-  // === ВЫБОР ПРЕПАРАТА ===
   dropdown.addEventListener('click', function(e) {
     const item = e.target.closest('.nomenclature-item');
     if (!item) return;
@@ -245,21 +211,18 @@
     searchInput.blur();
   });
 
-  // === ОЧИСТКА ВЫБОРА ===
   function clearSelection() {
     selectedIdInput.value = '';
     selectedInfo.style.display = 'none';
     searchInput.focus();
   }
 
-  // === ЗАКРЫТИЕ ПРИ КЛИКЕ ВНЕ ===
   document.addEventListener('click', function(e) {
     if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.style.display = 'none';
     }
   });
 
-  // === ЗАЩИТА ОТ XSS ===
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -267,13 +230,11 @@
     return div.innerHTML;
   }
 
-  // === АВТО-СИНХРОНИЗАЦИЯ КОЛИЧЕСТВА ===
   function syncQty() {
     const received = document.getElementById('qtyReceived')?.value;
     const remaining = document.getElementById('qtyRemaining');
     if (remaining) remaining.value = received || '';
   }
 </script>
-
-</body>
+</section>
 </html>

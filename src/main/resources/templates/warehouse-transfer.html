@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section" class="card">
+    <form th:action="@{/batches/transfer}" method="post">
+        <div class="form-group"><label>Откуда</label>
+            <select name="fromPharmacyId" class="form-control">
+                <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"></option>
+            </select>
+        </div>
+        <div class="form-group"><label>Куда</label>
+            <select name="toPharmacyId" class="form-control">
+                <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"></option>
+            </select>
+        </div>
+        <div class="form-group"><label>ID партии</label><input name="batchId" type="number" class="form-control" required/></div>
+        <div class="form-group"><label>Количество</label><input name="quantity" type="number" min="1" class="form-control" required/></div>
+        <div class="form-group"><label>Накладная</label><input name="waybillNumber" class="form-control" required/></div>
+        <button type="submit" class="btn btn-primary">Переместить</button>
+    </form>
+</section>
+</html>

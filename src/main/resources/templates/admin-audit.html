@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <table class="table">
+        <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Сущность</th><th>ID</th></tr></thead>
+        <tbody>
+        <tr th:each="log : ${logs.content}">
+            <td th:text="${log.timestamp}">t</td>
+            <td th:text="${log.user != null ? log.user.login : '—'}">u</td>
+            <td th:text="${log.action}">a</td>
+            <td th:text="${log.entityName}">e</td>
+            <td th:text="${log.entityId}">id</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</html>

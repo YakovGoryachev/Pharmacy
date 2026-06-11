@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.List;
 
-//todo make constraints
 
 @Entity
 @Table(name="pharmacies")
@@ -25,7 +24,8 @@ public class Pharmacy {
     private Integer numberLicense;
     private String phoneNumber;
     private String email;
-    private boolean is_active;
+    @Column(name = "is_active")
+    private boolean active = true;
     @CreationTimestamp
     private Instant createdAt;
 
@@ -113,12 +113,12 @@ public class Pharmacy {
         this.email = email;
     }
 
-    public boolean isIs_active() {
-        return is_active;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setIs_active(boolean is_active) {
-        this.is_active = is_active;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Instant getCreatedAt() {

@@ -4,8 +4,6 @@ import com.example.pharmacy.Pojo.Address;
 
 import java.time.Instant;
 
-//todo connectinos
-
 public class PharmacyDto {
     public PharmacyDto(){
 

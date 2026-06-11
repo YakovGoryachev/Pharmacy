@@ -5,23 +5,31 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
-//todo constraints
-
-
 @Entity
+@Table(name = "cheques")
 public class Cheque {
-    public Cheque(){}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String numberCheque;
-    @Column(name = "fiscal_number", nullable = false, unique = true)
+
+    @Column(name = "fiscal_number", unique = true)
     private String fiscalNumber;
-    @Column(name = "payment_method", nullable = false)
+
+    private Integer totalAmount;
+
+    @Column(name = "payment_method")
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    @Column(nullable = false)
+    private Boolean isReturned = false;
+
     @CreationTimestamp
     private Instant createdAt;
 
@@ -35,33 +43,9 @@ public class Cheque {
     @JsonIgnoreProperties("cheques")
     private User user;
 
-    @OneToMany(mappedBy = "cheque", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cheque", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("cheque")
-    private List<ChequePosition> chequePositions;
-
-    public List<ChequePosition> getChequePositions() {
-        return chequePositions;
-    }
-
-    public void setChequePositions(List<ChequePosition> chequePositions) {
-        this.chequePositions = chequePositions;
-    }
-
-    public Pharmacy getPharmacy() {
-        return pharmacy;
-    }
-
-    public void setPharmacy(Pharmacy pharmacy) {
-        this.pharmacy = pharmacy;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
+    private List<ChequePosition> chequePositions = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -87,6 +71,14 @@ public class Cheque {
         this.fiscalNumber = fiscalNumber;
     }
 
+    public Integer getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Integer totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
     public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
@@ -95,11 +87,43 @@ public class Cheque {
         this.paymentMethod = paymentMethod;
     }
 
+    public Boolean getIsReturned() {
+        return isReturned;
+    }
+
+    public void setIsReturned(Boolean returned) {
+        isReturned = returned;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Pharmacy getPharmacy() {
+        return pharmacy;
+    }
+
+    public void setPharmacy(Pharmacy pharmacy) {
+        this.pharmacy = pharmacy;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public List<ChequePosition> getChequePositions() {
+        return chequePositions;
+    }
+
+    public void setChequePositions(List<ChequePosition> chequePositions) {
+        this.chequePositions = chequePositions;
     }
 }

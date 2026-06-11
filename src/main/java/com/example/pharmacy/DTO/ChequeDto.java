@@ -4,8 +4,6 @@ import com.example.pharmacy.Pojo.PaymentMethod;
 
 import java.time.Instant;
 
-//todo connections
-
 public class ChequeDto {
     public ChequeDto(){
 

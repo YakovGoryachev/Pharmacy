@@ -6,7 +6,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.CreationTimestamp;
 
-//todo connectinos, JSON(record)
 
 import java.time.Instant;
 

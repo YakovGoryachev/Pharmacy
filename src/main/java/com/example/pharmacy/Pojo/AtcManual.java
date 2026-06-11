@@ -7,8 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 import java.util.List;
 
-//todo check type of code
-
 @Entity
 public class AtcManual {
     public AtcManual(){}

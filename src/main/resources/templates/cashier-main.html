@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="pos-layout">
+        <div>
+            <div class="card" style="padding:0">
+                <div class="card-header">
+                    <h2 style="margin:0">Каталог товаров</h2>
+                    <span class="text-sm text-muted" th:if="${pharmacyName}">
+                        Ваша аптека: <strong th:text="${pharmacyName}"></strong>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/cashier}" method="get" class="filter-bar" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;margin-bottom:1rem">
+                        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                            <label class="form-label text-sm">Поиск</label>
+                            <input type="text" name="q" class="form-control" autofocus
+                                   placeholder="МНН, торговое название, штрихкод"
+                                   th:value="${searchQuery}"/>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:160px">
+                            <label class="form-label text-sm">Аптека</label>
+                            <select name="pharmacyId" class="form-control form-select">
+                                <option value="">Все аптеки</option>
+                                <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"
+                                        th:selected="${filterPharmacyId != null && filterPharmacyId == p.id}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:100px">
+                            <label class="form-label text-sm">Цена от, ₽</label>
+                            <input type="number" name="priceMin" class="form-control" step="0.01" min="0"
+                                   th:value="${filterPriceMin}"/>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:100px">
+                            <label class="form-label text-sm">Цена до, ₽</label>
+                            <input type="number" name="priceMax" class="form-control" step="0.01" min="0"
+                                   th:value="${filterPriceMax}"/>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:140px">
+                            <label class="form-label text-sm">Сортировка</label>
+                            <select name="sort" class="form-control form-select">
+                                <option value="brandName" th:selected="${sortField == 'brandName'}">По названию</option>
+                                <option value="mnn" th:selected="${sortField == 'mnn'}">По МНН</option>
+                                <option value="price" th:selected="${sortField == 'price'}">По цене</option>
+                                <option value="available" th:selected="${sortField == 'available'}">По остатку</option>
+                                <option value="pharmacy" th:selected="${sortField == 'pharmacy'}">По аптеке</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:110px">
+                            <label class="form-label text-sm">Порядок</label>
+                            <select name="dir" class="form-control form-select">
+                                <option value="asc" th:selected="${sortDir == 'asc'}">По возрастанию</option>
+                                <option value="desc" th:selected="${sortDir == 'desc'}">По убыванию</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Применить</button>
+                        <a th:href="@{/cashier}" class="btn btn-ghost btn-sm"><i class="fas fa-undo"></i></a>
+                    </form>
+
+                    <p class="text-sm text-muted mb-1">
+                        Только товары в наличии (FEFO).
+                        <span th:if="${totalElements > 0}">
+                            Всего: <strong th:text="${totalElements}"></strong>
+                        </span>
+                    </p>
+                    <div th:if="${searchQuery != null and !searchQuery.isBlank() and searchQuery.trim().length() < 2}"
+                         class="alert alert-info">
+                        Слишком короткий запрос — введите не менее 2 символов.
+                    </div>
+                    <div th:if="${catalogRows.isEmpty()}" class="alert alert-warning">
+                        <span th:if="${searchQuery != null and searchQuery.trim().length() >= 2}">
+                            По запросу «<span th:text="${searchQuery}"></span>» ничего не найдено.
+                        </span>
+                        <span th:unless="${searchQuery != null and searchQuery.trim().length() >= 2}">
+                            Нет товаров с остатком по выбранным фильтрам.
+                        </span>
+                    </div>
+
+                    <div class="table-responsive" th:if="${!catalogRows.isEmpty()}">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Торговая марка</th>
+                                <th>МНН</th>
+                                <th>Дозировка / форма</th>
+                                <th class="text-right">Цена</th>
+                                <th class="text-right">Доступно</th>
+                                <th>Аптека</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="row : ${catalogRows}">
+                                <td>
+                                    <span class="font-bold" th:text="${row.brandName}">prep</span>
+                                    <span th:if="${row.receipt}" class="badge badge-warning" style="margin-left:0.35rem">Рецепт</span>
+                                    <span th:if="${row.marked}" class="badge badge-info" style="margin-left:0.35rem">Маркировка</span>
+                                </td>
+                                <td class="text-muted" th:text="${row.mnn}">mnn</td>
+                                <td class="text-sm" th:text="${row.dosageText}">—</td>
+                                <td class="text-right"
+                                    th:text="${@money.rubles(row.price)}">0</td>
+                                <td class="text-right" th:text="${row.availableQty}">0</td>
+                                <td>
+                                    <span th:text="${row.pharmacyName}">аптека</span>
+                                    <span th:if="${row.pharmacyId == userPharmacyId}" class="badge badge-success text-xs" style="margin-left:0.25rem">ваша</span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/cashier/add}" method="post" class="input-group" style="justify-content:flex-end"
+                                          th:if="${row.canAddToCart}">
+                                        <input type="hidden" name="nomenclatureId" th:value="${row.nomenclatureId}"/>
+                                        <input type="number" name="quantity" value="1" min="1"
+                                               th:max="${row.availableQty}" class="form-control" style="width:4rem"/>
+                                        <input th:if="${row.marked}" type="text" name="markingCode" class="form-control"
+                                               style="width:10rem" placeholder="Data Matrix" required/>
+                                        <button type="submit" class="btn btn-sm btn-primary">В чек</button>
+                                    </form>
+                                    <span th:if="${!row.canAddToCart}" class="text-xs text-muted">
+                                        Продажа только в своей аптеке
+                                    </span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination" th:if="${totalPages > 1}">
+                        <a th:href="@{/cashier(page=${currentPage - 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${searchQuery}, pharmacyId=${filterPharmacyId}, priceMin=${filterPriceMin}, priceMax=${filterPriceMax})}"
+                           class="page-btn" th:if="${currentPage > 0}">←</a>
+                        <th:block th:each="i : ${#numbers.sequence(
+                            currentPage > 1 ? currentPage - 1 : 0,
+                            currentPage < totalPages - 2 ? currentPage + 1 : totalPages - 1)}">
+                            <a th:if="${i == currentPage}" class="page-btn active" th:text="${i + 1}">1</a>
+                            <a th:unless="${i == currentPage}"
+                               th:href="@{/cashier(page=${i}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${searchQuery}, pharmacyId=${filterPharmacyId}, priceMin=${filterPriceMin}, priceMax=${filterPriceMax})}"
+                               class="page-btn" th:text="${i + 1}">1</a>
+                        </th:block>
+                        <a th:href="@{/cashier(page=${currentPage + 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, q=${searchQuery}, pharmacyId=${filterPharmacyId}, priceMin=${filterPriceMin}, priceMax=${filterPriceMax})}"
+                           class="page-btn" th:if="${currentPage < totalPages - 1}">→</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pos-cart">
+            <div class="pos-cart-header">
+                <span>Текущий чек</span>
+                <a th:href="@{/cashier/returns}" class="text-sm">Возвраты</a>
+            </div>
+            <div class="pos-cart-items" th:if="${cart.isEmpty()}">
+                <p class="text-muted text-center p-1">Чек пуст. Выберите товар слева и добавьте позицию.</p>
+            </div>
+            <div class="pos-cart-items" th:if="${!cart.isEmpty()}">
+                <div class="pos-cart-item" th:each="item, stat : ${cart}">
+                    <div style="flex:1;min-width:0">
+                        <div class="truncate font-bold" th:text="${item.displayName}">x</div>
+                        <div class="text-xs text-muted">
+                            <span th:text="${item.quantity} + ' × '"></span>
+                            <span th:text="${@money.rubles(item.price)}"></span>
+                            <span th:if="${item.receiptRequired}" class="badge badge-warning">Рецепт</span>
+                            <span th:if="${item.marked}" class="badge badge-info">Марк.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-05">
+                        <strong th:text="${#numbers.formatDecimal(item.lineTotal / 100.0, 1, 2)} + ' ₽'">0</strong>
+                        <form th:action="@{/cashier/remove}" method="post">
+                            <input type="hidden" name="index" th:value="${stat.index}"/>
+                            <button type="submit" class="btn btn-sm btn-ghost text-danger" title="Удалить">×</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="pos-cart-footer">
+                <div class="pos-cart-total">
+                    <span>Итого</span>
+                    <span th:text="${#numbers.formatDecimal(cartTotal / 100.0, 1, 2)} + ' ₽'">0 ₽</span>
+                </div>
+                <form th:action="@{/cashier/checkout}" method="post" th:if="${!cart.isEmpty()}">
+                    <div class="form-group">
+                        <label class="text-sm">Способ оплаты</label>
+                        <select name="paymentMethod" class="form-control form-select">
+                            <option th:each="pm : ${paymentMethods}" th:value="${pm}" th:text="${pm}"></option>
+                        </select>
+                    </div>
+                    <details class="mt-1" th:if="${cartNeedsRx}">
+                        <summary class="text-sm font-bold cursor-pointer">Данные рецепта</summary>
+                        <div class="form-group mt-1">
+                            <input type="text" name="rxPatientName" class="form-control" placeholder="ФИО пациента" required/>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="rxNumber" class="form-control" placeholder="Серия и номер рецепта" required/>
+                        </div>
+                        <div class="form-group">
+                            <input type="date" name="rxDate" class="form-control" required/>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="rxLpu" class="form-control" placeholder="Код ЛПУ" required/>
+                        </div>
+                    </details>
+                    <button type="submit" class="btn btn-success btn-block mt-1">Оплатить (F2)</button>
+                </form>
+                <p class="text-xs text-muted text-center mt-1" th:if="${cart.isEmpty()}">Добавьте позиции для оплаты</p>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

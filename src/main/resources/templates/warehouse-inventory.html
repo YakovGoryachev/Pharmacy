@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <p>Статус: <strong th:text="${session.status}"></strong></p>
+    <form th:if="${session.status == 'OPEN'}" th:action="@{'/batches/inventory/' + ${session.id} + '/save'}" method="post">
+        <table class="table">
+            <thead><tr><th>Партия</th><th>Номенклатура</th><th>Учёт</th><th>Факт</th><th>Разница</th></tr></thead>
+            <tbody>
+            <tr th:each="line : ${session.lines}">
+                <td th:text="${line.stock.batch.batchNumber}">b</td>
+                <td th:text="${line.stock.batch.nomenclature.tradeName}">n</td>
+                <td th:text="${line.bookQuantity}">0</td>
+                <td>
+                    <input type="number" class="form-control" style="max-width:120px"
+                           th:name="'actual_' + ${line.id}"
+                           th:value="${line.actualQuantity}" min="0" required/>
+                </td>
+                <td th:text="${line.difference}">0</td>
+            </tr>
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Сохранить факт</button>
+    </form>
+    <table th:if="${session.status != 'OPEN'}" class="table">
+        <thead><tr><th>Партия</th><th>Учёт</th><th>Факт</th><th>Разница</th></tr></thead>
+        <tbody>
+        <tr th:each="line : ${session.lines}">
+            <td th:text="${line.stock.batch.batchNumber}">b</td>
+            <td th:text="${line.bookQuantity}">0</td>
+            <td th:text="${line.actualQuantity}">0</td>
+            <td th:text="${line.difference}">0</td>
+        </tr>
+        </tbody>
+    </table>
+    <form th:if="${session.status == 'OPEN'}" th:action="@{'/batches/inventory/' + ${session.id} + '/complete'}" method="post" class="mt-3">
+        <button type="submit" class="btn btn-success">Завершить и применить</button>
+    </form>
+</section>
+</html>

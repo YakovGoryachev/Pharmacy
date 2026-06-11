@@ -3,24 +3,27 @@ package com.example.pharmacy.Pojo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
-//todo JSON
-//todo check type report
-
 @Entity
+@Table(name = "request_reports")
 public class RequestReport {
-    public RequestReport(){}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String reportType;
-    private record filters(){
 
-    }
+    private String reportType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "text")
+    private String filters;
+
     private String filePath;
+
     @CreationTimestamp
     private Instant generatedAt;
 
@@ -28,14 +31,6 @@ public class RequestReport {
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties("requestReports")
     private User user;
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     public Long getId() {
         return id;
@@ -53,6 +48,14 @@ public class RequestReport {
         this.reportType = reportType;
     }
 
+    public String getFilters() {
+        return filters;
+    }
+
+    public void setFilters(String filters) {
+        this.filters = filters;
+    }
+
     public String getFilePath() {
         return filePath;
     }
@@ -67,5 +70,13 @@ public class RequestReport {
 
     public void setGeneratedAt(Instant generatedAt) {
         this.generatedAt = generatedAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

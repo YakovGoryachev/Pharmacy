@@ -5,23 +5,28 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
+@Table(name = "marking_codes", uniqueConstraints = @UniqueConstraint(columnNames = "code"))
 public class MarkingCode {
-    public MarkingCode(){}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String code;
+
     private String gtin;
     private String serialNumber;
-    private Date expiryDate;
+    private LocalDate expiryDate;
     private String status;
-    @CreationTimestamp
+
     private Instant withdrawnAt;
+    private Long disposalDocumentId;
     private String mdlpStatus;
+
     @CreationTimestamp
     private Instant createdAt;
 
@@ -36,33 +41,9 @@ public class MarkingCode {
     private Batch batch;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chequePosition_id")
+    @JoinColumn(name = "cheque_position_id")
     @JsonIgnoreProperties("markingCode")
     private ChequePosition chequePosition;
-
-    public ChequePosition getChequePosition() {
-        return chequePosition;
-    }
-
-    public void setChequePosition(ChequePosition chequePosition) {
-        this.chequePosition = chequePosition;
-    }
-
-    public Batch getBatch() {
-        return batch;
-    }
-
-    public void setBatch(Batch batch) {
-        this.batch = batch;
-    }
-
-    public Nomenclature getNomenclature() {
-        return nomenclature;
-    }
-
-    public void setNomenclature(Nomenclature nomenclature) {
-        this.nomenclature = nomenclature;
-    }
 
     public Long getId() {
         return id;
@@ -96,11 +77,11 @@ public class MarkingCode {
         this.serialNumber = serialNumber;
     }
 
-    public Date getExpiryDate() {
+    public LocalDate getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
     }
 
@@ -120,6 +101,14 @@ public class MarkingCode {
         this.withdrawnAt = withdrawnAt;
     }
 
+    public Long getDisposalDocumentId() {
+        return disposalDocumentId;
+    }
+
+    public void setDisposalDocumentId(Long disposalDocumentId) {
+        this.disposalDocumentId = disposalDocumentId;
+    }
+
     public String getMdlpStatus() {
         return mdlpStatus;
     }
@@ -134,5 +123,29 @@ public class MarkingCode {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Nomenclature getNomenclature() {
+        return nomenclature;
+    }
+
+    public void setNomenclature(Nomenclature nomenclature) {
+        this.nomenclature = nomenclature;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
+    }
+
+    public ChequePosition getChequePosition() {
+        return chequePosition;
+    }
+
+    public void setChequePosition(ChequePosition chequePosition) {
+        this.chequePosition = chequePosition;
     }
 }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <a th:href="@{/dashboard}">Главная</a> <span class="breadcrumb-sep">/</span> <span>Отчёты</span>
+    </div>
+
+    <div sec:authorize="hasRole('ACCOUNTANT')" class="alert alert-info">
+        Режим бухгалтера: формирование PDF-отчётов и история загрузок.
+    </div>
+
+    <div class="grid-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem">
+        <div class="card stat-card">
+            <span class="stat-label">Выручка (30 дн.)</span>
+            <span class="stat-value" th:text="${#numbers.formatDecimal(metrics.revenue / 100.0, 1, 2)} + ' ₽'">0</span>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Чеков</span>
+            <span class="stat-value" th:text="${metrics.chequeCount}">0</span>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Средний чек</span>
+            <span class="stat-value" th:text="${#numbers.formatDecimal(metrics.avgCheque / 100.0, 1, 2)} + ' ₽'">0</span>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Дефектура</span>
+            <span class="stat-value text-warning" th:text="${metrics.lowStockCount}">0</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin:0">Формирование отчётов (PDF)</h3>
+        </div>
+        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start">
+            <form th:action="@{/reports/stock}" method="post" class="card" style="padding:1rem;min-width:220px">
+                <p class="text-sm text-muted">Остатки по партиям на складе аптеки</p>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> Остатки
+                </button>
+            </form>
+            <form th:action="@{/reports/sales}" method="post" class="card" style="padding:1rem;min-width:220px">
+                <p class="text-sm text-muted">Продажи за последние 30 дней</p>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> Продажи
+                </button>
+            </form>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;justify-content:center">
+                <a th:href="@{/reports/history}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-history"></i> История отчётов
+                </a>
+                <a th:href="@{/dashboard}" class="btn btn-ghost btn-sm">На дашборд</a>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

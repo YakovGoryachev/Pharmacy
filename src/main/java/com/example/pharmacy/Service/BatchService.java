@@ -5,19 +5,18 @@ import com.example.pharmacy.Pojo.Batch;
 import com.example.pharmacy.Pojo.Nomenclature;
 import com.example.pharmacy.Repository.BatchRepository;
 import com.example.pharmacy.Repository.NomenclatureRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.pharmacy.Specifications.BatchSpecifications;
+import com.example.pharmacy.audit.Audited;
+import com.example.pharmacy.util.MoneyUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 import org.springframework.data.jpa.domain.Specification;
-import com.example.pharmacy.Specifications.BatchSpecifications;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Array;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,56 +24,89 @@ public class BatchService {
 
     private final BatchRepository batchRepository;
     private final NomenclatureRepository nomenclatureRepository;
+    private final StockService stockService;
 
-    @Autowired
     public BatchService(BatchRepository batchRepository,
-                        NomenclatureRepository nomenclatureRepository){
+                        NomenclatureRepository nomenclatureRepository,
+                        StockService stockService) {
         this.batchRepository = batchRepository;
         this.nomenclatureRepository = nomenclatureRepository;
+        this.stockService = stockService;
     }
 
-    public Page<Batch> findFilteredBatches(String numBatches, String supplier, LocalDate dateEntrance, LocalDate expiryDate, int page, int size){
-        Specification<Batch> spec = BatchSpecifications.hasFilters(
-                numBatches, supplier, dateEntrance, expiryDate
-        );
-        Pageable pageable = PageRequest.of(page, size, Sort.by("receivedDate").descending());
-
+    public Page<Batch> findFilteredBatches(String numBatches, String supplier, LocalDate dateEntrance,
+                                           LocalDate expiryDate, int page, int size, String sort, String dir) {
+        Specification<Batch> spec = BatchSpecifications.hasFilters(numBatches, supplier, dateEntrance, expiryDate);
+        Sort s = "asc".equalsIgnoreCase(dir) ? Sort.by(sort).ascending() : Sort.by(sort).descending();
+        Pageable pageable = PageRequest.of(page, size, s);
         return batchRepository.findAll(spec, pageable);
     }
-    public void save(BatchDto bdto){
-        batchRepository.save(mapToPojo(bdto));
-    }
-    public BatchDto findById(Long id){
-        Batch b = batchRepository.findById(id)
-                .orElseThrow();
-        BatchDto bdto = mapToDto(b);
-        return bdto;
+
+    @Transactional
+    @Audited(entity = "Batch", action = "RECEIVE")
+    public Batch saveWithStock(BatchDto bdto, Long pharmacyId) {
+        Batch batch = mapToPojo(bdto);
+        batch = batchRepository.save(batch);
+        int qty = bdto.getQtyReceived() != null ? bdto.getQtyReceived() : bdto.getQtyInStock();
+        if (qty > 0 && pharmacyId != null) {
+            stockService.receiveStock(pharmacyId, batch, qty);
+        }
+        return batch;
     }
 
-    public void deleteById(Long id){
+    @Transactional
+    public Batch update(BatchDto bdto) {
+        Batch batch = batchRepository.findById(bdto.getId()).orElseThrow();
+        Nomenclature n = nomenclatureRepository.findById(bdto.getNomenclatureId()).orElseThrow();
+        batch.setNomenclature(n);
+        batch.setBatchNumber(bdto.getBatchNumber());
+        batch.setExpiryDate(bdto.getExpiryDate());
+        batch.setProductionDate(bdto.getProductionDate());
+        batch.setReceivedDate(bdto.getReceivedDate());
+        batch.setSupplier(bdto.getSupplier());
+        batch.setPrice(resolvePriceKopecks(bdto));
+        batch.setStorageZone(bdto.getStorageZone());
+        batch.setWrittenOff(bdto.getWrittenOff());
+        return batchRepository.save(batch);
+    }
+
+    public BatchDto findById(Long id) {
+        return batchRepository.findById(id).map(this::mapToDto).orElse(null);
+    }
+
+    public void deleteById(Long id) {
         batchRepository.deleteById(id);
     }
 
-    private Batch mapToPojo(BatchDto bdto){
+    public List<Batch> findExpiringBatches(LocalDate before) {
+        return batchRepository.findAll().stream()
+                .filter(b -> b.getExpiryDate() != null && !b.getExpiryDate().isAfter(before))
+                .filter(b -> b.getQtyInStock() != null && b.getQtyInStock() > 0)
+                .toList();
+    }
+
+    private Batch mapToPojo(BatchDto bdto) {
         Batch b = new Batch();
-        Nomenclature n = nomenclatureRepository.findById(bdto.getNomenclatureId())
-                        .orElseThrow();
-        b.setId(bdto.getId());
+        if (bdto.getId() != null) {
+            b.setId(bdto.getId());
+        }
+        Nomenclature n = nomenclatureRepository.findById(bdto.getNomenclatureId()).orElseThrow();
         b.setNomenclature(n);
         b.setBatchNumber(bdto.getBatchNumber());
         b.setExpiryDate(bdto.getExpiryDate());
         b.setProductionDate(bdto.getProductionDate());
-        b.setReceivedDate(bdto.getReceivedDate());
+        b.setReceivedDate(bdto.getReceivedDate() != null ? bdto.getReceivedDate() : LocalDate.now());
         b.setSupplier(bdto.getSupplier());
-        b.setPrice(bdto.getPrice());
-        b.setQtyReceived(bdto.getQtyInStock());
-        b.setQtyInStock(bdto.getQtyInStock());
+        b.setPrice(resolvePriceKopecks(bdto));
+        int qty = bdto.getQtyReceived() != null ? bdto.getQtyReceived() : (bdto.getQtyInStock() != null ? bdto.getQtyInStock() : 0);
+        b.setQtyReceived(qty);
+        b.setQtyInStock(0);
         b.setStorageZone(bdto.getStorageZone());
-        b.setWrittenOff(bdto.getWrittenOff());
+        b.setWrittenOff(false);
         return b;
     }
 
-    private BatchDto mapToDto(Batch b){
+    private BatchDto mapToDto(Batch b) {
         BatchDto bdto = new BatchDto();
         bdto.setId(b.getId());
         bdto.setNomenclatureId(b.getNomenclature().getId());
@@ -84,11 +116,15 @@ public class BatchService {
         bdto.setReceivedDate(b.getReceivedDate());
         bdto.setSupplier(b.getSupplier());
         bdto.setPrice(b.getPrice());
-        bdto.setQtyReceived(b.getQtyInStock());
+        bdto.setPriceRubles(MoneyUtils.toRubles(b.getPrice()));
+        bdto.setQtyReceived(b.getQtyReceived());
         bdto.setQtyInStock(b.getQtyInStock());
         bdto.setStorageZone(b.getStorageZone());
         bdto.setWrittenOff(b.getWrittenOff());
-
         return bdto;
+    }
+
+    private static Integer resolvePriceKopecks(BatchDto bdto) {
+        return MoneyUtils.resolveKopecks(bdto.getPriceRubles(), bdto.getPrice());
     }
 }

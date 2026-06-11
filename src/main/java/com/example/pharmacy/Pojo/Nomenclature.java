@@ -2,11 +2,8 @@ package com.example.pharmacy.Pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import org.springframework.stereotype.Controller;
 
 import java.util.List;
-
-//todo json
 
 @Entity
 public class Nomenclature {
@@ -15,6 +12,8 @@ public class Nomenclature {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, length = 32)
+    private String productType = ProductType.MEDICINE.name();
     private String mnn;
     private String brandName;
     private String formOfRelease;
@@ -25,8 +24,11 @@ public class Nomenclature {
     private String country;
     private String barcode;
     private Integer price;
-    private record storageConditions(){}
+    @Embedded
+    private StorageConditions storageConditions;
     private Integer minStockLevel;
+    @Column(nullable = true, columnDefinition = "boolean default false")
+    private Boolean marked = false;
     @Column(nullable = true)
     private Boolean receipt;
     @Column(nullable = true)
@@ -104,6 +106,14 @@ public class Nomenclature {
 
     public void setChequePositions(List<ChequePosition> chequePositions) {
         this.chequePositions = chequePositions;
+    }
+
+    public String getProductType() {
+        return productType != null ? productType : ProductType.MEDICINE.name();
+    }
+
+    public void setProductType(String productType) {
+        this.productType = productType;
     }
 
     public Long getId() {
@@ -224,5 +234,21 @@ public class Nomenclature {
 
     public void setDosageUnit(String dosageUnit) {
         this.dosageUnit = dosageUnit;
+    }
+
+    public StorageConditions getStorageConditions() {
+        return storageConditions;
+    }
+
+    public void setStorageConditions(StorageConditions storageConditions) {
+        this.storageConditions = storageConditions;
+    }
+
+    public Boolean getMarked() {
+        return marked != null ? marked : false;
+    }
+
+    public void setMarked(Boolean marked) {
+        this.marked = marked;
     }
 }

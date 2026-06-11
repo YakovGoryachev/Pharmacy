@@ -1,23 +1,31 @@
 package com.example.pharmacy;
 
-import com.example.pharmacy.Pojo.Batch;
-import com.example.pharmacy.Pojo.Nomenclature;
+import com.example.pharmacy.Pojo.RoleName;
+import com.example.pharmacy.Pojo.User;
+import com.example.pharmacy.security.PharmaUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Controller
 public class MainController {
-    public MainController(){
 
+    @GetMapping({"/uchet-lp", "/pos"})
+    public String legacyCashierRedirect() {
+        return "redirect:/cashier";
     }
 
-    @GetMapping("/hello")
-    public String view(Model model){
-        return "uchet-lp";
+    @GetMapping({"/", "/hello"})
+    public String home(@AuthenticationPrincipal PharmaUserDetails principal) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        User user = principal.getUser();
+        String role = user.getRole().getName();
+        return switch (role) {
+            case RoleName.TEST, RoleName.MANAGER, RoleName.ADMIN, RoleName.ACCOUNTANT -> "redirect:/dashboard";
+            case RoleName.PHARMACIST -> "redirect:/cashier";
+            default -> "redirect:/login";
+        };
     }
 }

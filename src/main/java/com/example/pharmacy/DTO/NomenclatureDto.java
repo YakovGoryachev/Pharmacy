@@ -4,8 +4,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-//todo connectinos, JSON(record)
-
 public class NomenclatureDto {
     public NomenclatureDto(){
 
@@ -28,6 +26,7 @@ public class NomenclatureDto {
     }
 
     private Long id;
+    private String productType;
     private Long atxId;
     private String mnn;
     private String atxCode;
@@ -45,11 +44,22 @@ public class NomenclatureDto {
     private Boolean receipt;
     private Boolean narcotic;
     private Boolean psychotropic;
+    private Boolean marked;
 
     private Long productCategoryId;
     private String productCategoryName;
 
     private String displayText;
+    /** Доступно в текущей аптеке (для кассы), не хранится в БД */
+    private Integer availableQty;
+
+    public Integer getAvailableQty() {
+        return availableQty;
+    }
+
+    public void setAvailableQty(Integer availableQty) {
+        this.availableQty = availableQty;
+    }
 
     public String getDisplayText() {
         return displayText;
@@ -73,6 +83,14 @@ public class NomenclatureDto {
 
     public void setProductCategoryName(String productCategoryName) {
         this.productCategoryName = productCategoryName;
+    }
+
+    public String getProductType() {
+        return productType;
+    }
+
+    public void setProductType(String productType) {
+        this.productType = productType;
     }
 
     public Long getAtxId() {
@@ -211,5 +229,13 @@ public class NomenclatureDto {
 
     public void setPsychotropic(Boolean psychotropic) {
         this.psychotropic = psychotropic;
+    }
+
+    public Boolean getMarked() {
+        return marked;
+    }
+
+    public void setMarked(Boolean marked) {
+        this.marked = marked;
     }
 }

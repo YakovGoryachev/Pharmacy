@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section" class="card">
+    <h2>Фискальный чек (эмуляция)</h2>
+    <div class="flex gap-2 flex-wrap mb-1">
+        <div><span class="text-muted">Номер:</span> <strong th:text="${cheque.numberCheque}"></strong></div>
+        <div><span class="text-muted">Фискальный №:</span> <strong th:text="${cheque.fiscalNumber}"></strong></div>
+        <div><span class="text-muted">Сумма:</span> <strong class="text-primary" th:text="${#numbers.formatDecimal(cheque.totalAmount / 100.0, 1, 2)} + ' ₽'"></strong></div>
+        <div><span class="text-muted">Оплата:</span> <span th:text="${cheque.paymentMethod}"></span></div>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead><tr><th>Товар</th><th>Кол-во</th><th class="text-right">Сумма</th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${cheque.chequePositions}">
+                <td th:text="${p.nomenclature.brandName}">n</td>
+                <td th:text="${p.quantity}">1</td>
+                <td class="text-right" th:text="${#numbers.formatDecimal(p.sumOfPosition / 100.0, 1, 2)} + ' ₽'">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer" style="margin:1.5rem -1.5rem -1.5rem;padding:1rem 1.5rem">
+        <a th:href="@{/cashier}" class="btn btn-primary">Новая продажа</a>
+        <a th:href="@{/cashier/returns}" class="btn btn-secondary">Возвраты</a>
+    </div>
+</section>
+</html>

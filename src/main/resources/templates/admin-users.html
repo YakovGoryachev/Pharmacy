@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <span>Администрирование</span> <span class="breadcrumb-sep">/</span> <span>Пользователи</span>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+        <a th:href="@{/admin/pharmacies}" class="btn btn-ghost btn-sm">Аптеки</a>
+        <a th:href="@{/admin/users/create}" class="btn btn-primary btn-sm">Добавить пользователя</a>
+    </div>
+    <table class="data-table">
+        <thead><tr><th>Логин</th><th>ФИО</th><th>Роль</th><th>Аптека</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="u : ${users}">
+            <td th:text="${u.login}">l</td>
+            <td th:text="${u.name}">n</td>
+            <td th:text="${u.role.name}">r</td>
+            <td th:text="${u.pharmacy != null ? u.pharmacy.name : '—'}">p</td>
+            <td><a th:href="@{'/admin/users/delete/' + ${u.id}}" class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">Удалить</a></td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</html>

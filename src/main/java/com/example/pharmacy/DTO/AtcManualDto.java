@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-//todo connectinos
 
 public class AtcManualDto {
     public AtcManualDto(){

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section">
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><span>Главная</span></span>
+        <span th:if="${pharmacyName}" class="text-muted text-sm" style="margin-left:0.5rem"
+              th:text="'— ' + ${pharmacyName}"></span>
+    </div>
+
+    <div th:if="${showDetailedAnalytics}" class="card" style="margin-bottom:1.25rem">
+        <div class="card-body">
+            <form th:action="@{/dashboard}" method="get" class="filter-bar" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end">
+                <div class="form-group" style="margin:0" th:if="${isAdminAnalytics}">
+                    <label class="form-label">Аптека</label>
+                    <select name="pharmacyId" class="form-control form-select">
+                        <option value="">Вся сеть (сводка)</option>
+                        <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"
+                                th:selected="${selectedPharmacyId != null && selectedPharmacyId == p.id}"></option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">С</label>
+                    <input type="date" name="from" class="form-control" th:value="${fromDate}"/>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">По</label>
+                    <input type="date" name="to" class="form-control" th:value="${toDate}"/>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Применить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Детальная аналитика: админ и заведующий -->
+    <div th:if="${showDetailedAnalytics}" th:with="m=${analytics.metrics}">
+        <div class="grid-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem">
+            <div class="card stat-card">
+                <span class="stat-label">Выручка за период</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(m.revenue / 100.0, 1, 2)} + ' ₽'">0</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Чеков</span>
+                <span class="stat-value" th:text="${m.chequeCount}">0</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Средний чек</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(m.avgCheque / 100.0, 1, 2)} + ' ₽'">0</span>
+            </div>
+            <div class="card stat-card" th:if="${isManagerAnalytics}">
+                <span class="stat-label">Списано (шт.)</span>
+                <span class="stat-value text-warning" th:text="${analytics.writeOffQty}">0</span>
+            </div>
+            <div class="card stat-card" th:if="${isManagerAnalytics || isAdminAnalytics}">
+                <span class="stat-label">Топ-категория</span>
+                <span class="stat-value" style="font-size:1rem" th:text="${analytics.topCategoryName}">—</span>
+            </div>
+            <div class="card stat-card" th:if="${isAdminAnalytics && !networkView}">
+                <span class="stat-label">Списано (шт.)</span>
+                <span class="stat-value text-warning" th:text="${analytics.writeOffQty}">0</span>
+            </div>
+        </div>
+
+        <div class="grid-2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem"
+             th:if="${isManagerAnalytics || (isAdminAnalytics && !networkView)}">
+            <div class="card">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Самый продаваемый товар</h3></div>
+                <div class="card-body">
+                    <div class="font-bold" th:text="${analytics.bestProductName}">—</div>
+                    <div class="text-sm text-muted"
+                         th:text="${analytics.bestProductRevenue > 0 ? #numbers.formatDecimal(analytics.bestProductRevenue / 100.0, 1, 2) + ' ₽ за период' : 'Нет продаж'}"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Самый непродаваемый товар</h3></div>
+                <div class="card-body">
+                    <div class="font-bold" th:text="${analytics.worstProductName}">—</div>
+                    <div class="text-sm text-muted"
+                         th:text="${analytics.worstProductQty > 0 ? analytics.worstProductQty + ' шт. продано за период' : 'Нет продаж'}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;margin-bottom:1.5rem">
+            <div class="card" style="grid-column:1/-1">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Выручка по дням</h3></div>
+                <div class="card-body" style="height:280px">
+                    <canvas id="chartRevenue"></canvas>
+                </div>
+            </div>
+            <div class="card" th:if="${isManagerAnalytics || (isAdminAnalytics && !networkView)}">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Выручка по категориям</h3></div>
+                <div class="card-body" style="height:280px">
+                    <canvas id="chartCategories"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Способы оплаты</h3></div>
+                <div class="card-body" style="height:260px;display:flex;justify-content:center">
+                    <canvas id="chartPayment" style="max-width:280px"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Топ товаров (сумма)</h3></div>
+                <div class="card-body" style="height:280px">
+                    <canvas id="chartTopProducts"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-sm text-muted" th:if="${isAdminAnalytics && networkView}">
+            Показана сводная аналитика по всем аптекам. Выберите конкретную аптеку для детализации.
+        </p>
+        <p class="text-sm text-muted" th:if="${isManagerAnalytics}">
+            Аналитика только по вашей аптеке. Списано единиц за период: <strong th:text="${analytics.writeOffQty}">0</strong>
+        </p>
+    </div>
+
+    <!-- Упрощённый дашборд для остальных ролей -->
+    <div th:unless="${showDetailedAnalytics}">
+        <div class="grid-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem">
+            <div class="card stat-card">
+                <span class="stat-label">Выручка за 30 дней</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(metrics.revenue / 100.0, 1, 2)} + ' ₽'">0</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Количество чеков</span>
+                <span class="stat-value" th:text="${metrics.chequeCount}">0</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Средний чек</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(metrics.avgCheque / 100.0, 1, 2)} + ' ₽'">0</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Позиции ниже мин. остатка</span>
+                <span class="stat-value text-warning" th:text="${metrics.lowStockCount}">0</span>
+            </div>
+        </div>
+        <div class="chart-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;margin-bottom:1.5rem">
+            <div class="card">
+                <div class="card-header"><h3 style="margin:0;font-size:1rem">Выручка по дням</h3></div>
+                <div class="card-body" style="height:260px"><canvas id="chartRevenueSimple"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3 style="margin:0">Быстрые действия</h3></div>
+        <div class="card-body" style="padding:1.25rem;display:flex;flex-wrap:wrap;gap:0.75rem">
+            <a th:href="@{/cashier}" class="btn btn-primary" sec:authorize="hasAnyRole('PHARMACIST','TEST')">
+                <i class="fas fa-cash-register"></i> АРМ кассира
+            </a>
+            <a th:href="@{/batches}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')">
+                <i class="fas fa-boxes"></i> Склад
+            </a>
+            <a th:href="@{/nomenclature}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')">
+                <i class="fas fa-store"></i> Номенклатура
+            </a>
+            <a th:href="@{/reports}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','ACCOUNTANT','TEST')">
+                <i class="fas fa-chart-line"></i> Отчёты
+            </a>
+            <a th:href="@{/admin/pharmacies}" class="btn btn-ghost" sec:authorize="hasAnyRole('ADMIN','TEST')">
+                <i class="fas fa-hospital"></i> Аптеки
+            </a>
+            <a th:href="@{/admin/users}" class="btn btn-ghost" sec:authorize="hasAnyRole('ADMIN','TEST')">
+                <i class="fas fa-users-cog"></i> Пользователи
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:if="${showDetailedAnalytics}" th:inline="javascript">
+        const charts = /*[[${analytics.charts}]]*/ {};
+        const categoryLabels = /*[[${analytics.categoryLabels}]]*/ [];
+        const categoryRevenues = /*[[${analytics.categoryRevenues}]]*/ [];
+        const isManager = /*[[${isManagerAnalytics}]]*/ false;
+        const isAdmin = /*[[${isAdminAnalytics}]]*/ false;
+        const networkView = /*[[${networkView}]]*/ false;
+        const showCategoryChart = isManager || (isAdmin && !networkView);
+
+        new Chart(document.getElementById('chartRevenue'), {
+            type: 'line',
+            data: {
+                labels: charts.dayLabels || [],
+                datasets: [{
+                    label: 'Выручка, ₽',
+                    data: (charts.dayRevenue || []).map(v => v / 100),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        if (showCategoryChart && document.getElementById('chartCategories')) {
+            new Chart(document.getElementById('chartCategories'), {
+                type: 'bar',
+                data: {
+                    labels: categoryLabels.length ? categoryLabels : ['Нет данных'],
+                    datasets: [{
+                        label: 'Выручка, ₽',
+                        data: categoryRevenues.length ? categoryRevenues.map(v => v / 100) : [0],
+                        backgroundColor: '#7c3aed'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        new Chart(document.getElementById('chartPayment'), {
+            type: 'doughnut',
+            data: {
+                labels: charts.paymentLabels?.length ? charts.paymentLabels : ['Нет данных'],
+                datasets: [{
+                    data: charts.paymentAmounts?.length ? charts.paymentAmounts.map(v => v / 100) : [1],
+                    backgroundColor: ['#2563eb', '#16a34a', '#f59e0b', '#8b5cf6']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('chartTopProducts'), {
+            type: 'bar',
+            data: {
+                labels: charts.topProductLabels?.length ? charts.topProductLabels : ['Нет продаж'],
+                datasets: [{
+                    label: 'Сумма, ₽',
+                    data: charts.topProductAmounts?.length ? charts.topProductAmounts.map(v => v / 100) : [0],
+                    backgroundColor: '#0d9488'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+        });
+    </script>
+    <script th:unless="${showDetailedAnalytics}" th:inline="javascript">
+        const dayLabels = /*[[${charts.dayLabels}]]*/ [];
+        const dayRevenue = /*[[${charts.dayRevenue}]]*/ [];
+        const el = document.getElementById('chartRevenueSimple');
+        if (el) {
+            new Chart(el, {
+                type: 'line',
+                data: {
+                    labels: dayLabels,
+                    datasets: [{ label: 'Выручка', data: dayRevenue.map(v => v / 100), borderColor: '#2563eb', fill: true, tension: 0.3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+    </script>
+</section>
+</html>

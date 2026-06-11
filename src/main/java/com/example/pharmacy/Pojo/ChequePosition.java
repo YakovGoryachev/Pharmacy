@@ -6,22 +6,18 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-//todo json receipt
-
 @Entity
+@Table(name = "cheque_positions")
 public class ChequePosition {
-    public ChequePosition(){}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private Integer quantity;
     private Integer cost;
     private Integer sumOfPosition;
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record receiptData(
 
-    ){}
     @CreationTimestamp
     private Instant createdAt;
 
@@ -40,42 +36,13 @@ public class ChequePosition {
     @JsonIgnoreProperties("chequePositions")
     private Batch batch;
 
-    //chek
     @OneToOne(mappedBy = "chequePosition", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnoreProperties("chequePosition")
     private MarkingCode markingCode;
 
-    public MarkingCode getMarkingCode() {
-        return markingCode;
-    }
-
-    public void setMarkingCode(MarkingCode markingCode) {
-        this.markingCode = markingCode;
-    }
-
-    public Cheque getCheque() {
-        return cheque;
-    }
-
-    public void setCheque(Cheque cheque) {
-        this.cheque = cheque;
-    }
-
-    public Nomenclature getNomenclature() {
-        return nomenclature;
-    }
-
-    public void setNomenclature(Nomenclature nomenclature) {
-        this.nomenclature = nomenclature;
-    }
-
-    public Batch getBatch() {
-        return batch;
-    }
-
-    public void setBatch(Batch batch) {
-        this.batch = batch;
-    }
+    @OneToOne(mappedBy = "chequePosition", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("chequePosition")
+    private Prescription prescription;
 
     public Long getId() {
         return id;
@@ -115,5 +82,45 @@ public class ChequePosition {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Cheque getCheque() {
+        return cheque;
+    }
+
+    public void setCheque(Cheque cheque) {
+        this.cheque = cheque;
+    }
+
+    public Nomenclature getNomenclature() {
+        return nomenclature;
+    }
+
+    public void setNomenclature(Nomenclature nomenclature) {
+        this.nomenclature = nomenclature;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
+    }
+
+    public MarkingCode getMarkingCode() {
+        return markingCode;
+    }
+
+    public void setMarkingCode(MarkingCode markingCode) {
+        this.markingCode = markingCode;
+    }
+
+    public Prescription getPrescription() {
+        return prescription;
+    }
+
+    public void setPrescription(Prescription prescription) {
+        this.prescription = prescription;
     }
 }
