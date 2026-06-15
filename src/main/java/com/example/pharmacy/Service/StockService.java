@@ -145,6 +145,27 @@ public class StockService {
                 .orElseThrow(() -> new BusinessException("Остаток не найден для партии"));
     }
 
+    public Stock getStockByBatchNumber(Long pharmacyId, String batchNumber) {
+        Batch batch = batchRepository.findByBatchNumber(batchNumber.trim())
+                .orElseThrow(() -> new BusinessException("Партия не найдена: " + batchNumber));
+        return getStock(pharmacyId, batch.getId());
+    }
+
+    @Transactional
+    public void transfer(Long fromPharmacyId, Long toPharmacyId, String batchNumber, int qty,
+                         String waybillNumber, User user) {
+        Batch batch = batchRepository.findByBatchNumber(batchNumber.trim())
+                .orElseThrow(() -> new BusinessException("Партия не найдена: " + batchNumber));
+        transfer(fromPharmacyId, toPharmacyId, batch.getId(), qty, waybillNumber, user);
+    }
+
+    @Transactional
+    public void writeOff(Long pharmacyId, String batchNumber, int qty) {
+        Batch batch = batchRepository.findByBatchNumber(batchNumber.trim())
+                .orElseThrow(() -> new BusinessException("Партия не найдена: " + batchNumber));
+        writeOff(pharmacyId, batch.getId(), qty);
+    }
+
     public List<Stock> listByPharmacy(Long pharmacyId) {
         return stockRepository.findByPharmacyId(pharmacyId);
     }

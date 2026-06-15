@@ -23,8 +23,10 @@ public class MainController {
         User user = principal.getUser();
         String role = user.getRole().getName();
         return switch (role) {
-            case RoleName.TEST, RoleName.MANAGER, RoleName.ADMIN, RoleName.ACCOUNTANT -> "redirect:/dashboard";
+            case RoleName.ADMIN -> "redirect:/admin/users";
             case RoleName.PHARMACIST -> "redirect:/cashier";
+            case RoleName.TEST, RoleName.MANAGER, RoleName.DIRECTOR,
+                 RoleName.NETWORK_OWNER, RoleName.ACCOUNTANT -> "redirect:/dashboard";
             default -> "redirect:/login";
         };
     }

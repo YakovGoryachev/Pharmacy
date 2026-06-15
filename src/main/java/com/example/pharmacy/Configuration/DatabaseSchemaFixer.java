@@ -7,6 +7,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * Дополняет ddl-auto=update для PostgreSQL: NOT NULL-колонки без DEFAULT
  * не добавляются на таблицы с данными.
@@ -27,6 +29,47 @@ public class DatabaseSchemaFixer implements ApplicationRunner {
         patchBooleanColumn("nomenclature", "marked", false);
         patchIntegerColumn("users", "failed_login_attempts", 0);
         patchBooleanColumn("cheques", "is_returned", false);
+        fixPostgresSequences();
+        ensureBatchNumberUnique();
+    }
+
+    private void fixPostgresSequences() {
+        if (!isPostgres()) {
+            return;
+        }
+        List<String> tables = List.of(
+                "nomenclature", "batch", "stock", "pharmacies", "users", "categories",
+                "atc_manual", "cheques", "cheque_positions", "marking_codes",
+                "write_off_documents", "stock_transfers", "inventory_sessions", "inventory_lines"
+        );
+        for (String table : tables) {
+            fixSequence(table);
+        }
+    }
+
+    private void fixSequence(String table) {
+        try {
+            String sequence = jdbc.queryForObject(
+                    "SELECT pg_get_serial_sequence(?, 'id')", String.class, table);
+            if (sequence == null) {
+                return;
+            }
+            Long maxId = jdbc.queryForObject(
+                    "SELECT COALESCE(MAX(id), 0) FROM " + table, Long.class);
+            jdbc.queryForObject("SELECT setval(?, ?)", Long.class, sequence, maxId);
+        } catch (Exception ignored) {
+            // таблица может ещё не существовать
+        }
+    }
+
+    private void ensureBatchNumberUnique() {
+        if (!isPostgres()) {
+            return;
+        }
+        jdbc.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS batch_batch_number_key ON batch (batch_number)
+                WHERE batch_number IS NOT NULL
+                """);
     }
 
     private void patchBooleanColumn(String table, String column, boolean defaultValue) {

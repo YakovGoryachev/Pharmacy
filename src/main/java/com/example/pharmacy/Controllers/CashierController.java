@@ -91,7 +91,7 @@ public class CashierController {
         model.addAttribute("userPharmacyId", userPharmacyId);
         model.addAttribute("cart", cart);
         model.addAttribute("cartTotal", cart.stream().mapToInt(CartItemDto::getLineTotal).sum());
-        model.addAttribute("paymentMethods", PaymentMethod.values());
+        model.addAttribute("paymentMethods", PaymentMethod.forCashier());
         model.addAttribute("cartNeedsRx", cart.stream().anyMatch(CartItemDto::isReceiptRequired));
         model.addAttribute("pageTitle", "АРМ кассира");
         model.addAttribute("activeNav", "cashier");
@@ -143,6 +143,10 @@ public class CashierController {
                            @RequestParam(required = false) java.time.LocalDate rxDate,
                            @RequestParam(required = false) String rxLpu,
                            RedirectAttributes ra) {
+        if (!paymentMethod.isAvailableAtCashier()) {
+            ra.addFlashAttribute("errorMessage", "Выбранный способ оплаты недоступен на кассе");
+            return "redirect:/cashier";
+        }
         for (CartItemDto item : cart) {
             if (item.isReceiptRequired()) {
                 PrescriptionFormDto rx = new PrescriptionFormDto();

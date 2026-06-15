@@ -16,6 +16,7 @@ public class Batch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true)
     private String batchNumber;
     private LocalDate expiryDate; //was Date
     private LocalDate productionDate;

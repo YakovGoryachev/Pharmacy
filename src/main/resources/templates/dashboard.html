@@ -11,7 +11,7 @@
     <div th:if="${showDetailedAnalytics}" class="card" style="margin-bottom:1.25rem">
         <div class="card-body">
             <form th:action="@{/dashboard}" method="get" class="filter-bar" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end">
-                <div class="form-group" style="margin:0" th:if="${isAdminAnalytics}">
+                <div class="form-group" style="margin:0" th:if="${isNetworkAnalytics}">
                     <label class="form-label">Аптека</label>
                     <select name="pharmacyId" class="form-control form-select">
                         <option value="">Вся сеть (сводка)</option>
@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    <!-- Детальная аналитика: админ и заведующий -->
+    <!-- Детальная аналитика: директор, владелец сети и заведующий -->
     <div th:if="${showDetailedAnalytics}" th:with="m=${analytics.metrics}">
         <div class="grid-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem">
             <div class="card stat-card">
@@ -51,18 +51,18 @@
                 <span class="stat-label">Списано (шт.)</span>
                 <span class="stat-value text-warning" th:text="${analytics.writeOffQty}">0</span>
             </div>
-            <div class="card stat-card" th:if="${isManagerAnalytics || isAdminAnalytics}">
+            <div class="card stat-card" th:if="${isManagerAnalytics || isNetworkAnalytics}">
                 <span class="stat-label">Топ-категория</span>
                 <span class="stat-value" style="font-size:1rem" th:text="${analytics.topCategoryName}">—</span>
             </div>
-            <div class="card stat-card" th:if="${isAdminAnalytics && !networkView}">
+            <div class="card stat-card" th:if="${isNetworkAnalytics && !networkView}">
                 <span class="stat-label">Списано (шт.)</span>
                 <span class="stat-value text-warning" th:text="${analytics.writeOffQty}">0</span>
             </div>
         </div>
 
         <div class="grid-2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem"
-             th:if="${isManagerAnalytics || (isAdminAnalytics && !networkView)}">
+             th:if="${isManagerAnalytics || (isNetworkAnalytics && !networkView)}">
             <div class="card">
                 <div class="card-header"><h3 style="margin:0;font-size:1rem">Самый продаваемый товар</h3></div>
                 <div class="card-body">
@@ -88,7 +88,7 @@
                     <canvas id="chartRevenue"></canvas>
                 </div>
             </div>
-            <div class="card" th:if="${isManagerAnalytics || (isAdminAnalytics && !networkView)}">
+            <div class="card" th:if="${isManagerAnalytics || (isNetworkAnalytics && !networkView)}">
                 <div class="card-header"><h3 style="margin:0;font-size:1rem">Выручка по категориям</h3></div>
                 <div class="card-body" style="height:280px">
                     <canvas id="chartCategories"></canvas>
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <p class="text-sm text-muted" th:if="${isAdminAnalytics && networkView}">
+        <p class="text-sm text-muted" th:if="${isNetworkAnalytics && networkView}">
             Показана сводная аналитика по всем аптекам. Выберите конкретную аптеку для детализации.
         </p>
         <p class="text-sm text-muted" th:if="${isManagerAnalytics}">
@@ -147,22 +147,22 @@
     <div class="card">
         <div class="card-header"><h3 style="margin:0">Быстрые действия</h3></div>
         <div class="card-body" style="padding:1.25rem;display:flex;flex-wrap:wrap;gap:0.75rem">
-            <a th:href="@{/cashier}" class="btn btn-primary" sec:authorize="hasAnyRole('PHARMACIST','TEST')">
+            <a th:href="@{/cashier}" class="btn btn-primary" sec:authorize="hasAnyRole('ПЕРВОСТОЛЬНИК','ТЕСТ')">
                 <i class="fas fa-cash-register"></i> АРМ кассира
             </a>
-            <a th:href="@{/batches}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')">
+            <a th:href="@{/batches}" class="btn btn-secondary" sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')">
                 <i class="fas fa-boxes"></i> Склад
             </a>
-            <a th:href="@{/nomenclature}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')">
+            <a th:href="@{/nomenclature}" class="btn btn-secondary" sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')">
                 <i class="fas fa-store"></i> Номенклатура
             </a>
-            <a th:href="@{/reports}" class="btn btn-secondary" sec:authorize="hasAnyRole('MANAGER','ADMIN','ACCOUNTANT','TEST')">
+            <a th:href="@{/reports}" class="btn btn-secondary" sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','БУХГАЛТЕР','ТЕСТ')">
                 <i class="fas fa-chart-line"></i> Отчёты
             </a>
-            <a th:href="@{/admin/pharmacies}" class="btn btn-ghost" sec:authorize="hasAnyRole('ADMIN','TEST')">
+            <a th:href="@{/admin/pharmacies}" class="btn btn-ghost" sec:authorize="hasAnyRole('ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')">
                 <i class="fas fa-hospital"></i> Аптеки
             </a>
-            <a th:href="@{/admin/users}" class="btn btn-ghost" sec:authorize="hasAnyRole('ADMIN','TEST')">
+            <a th:href="@{/admin/users}" class="btn btn-ghost" sec:authorize="hasAnyRole('АДМИНИСТРАТОР','ТЕСТ')">
                 <i class="fas fa-users-cog"></i> Пользователи
             </a>
         </div>
@@ -174,9 +174,9 @@
         const categoryLabels = /*[[${analytics.categoryLabels}]]*/ [];
         const categoryRevenues = /*[[${analytics.categoryRevenues}]]*/ [];
         const isManager = /*[[${isManagerAnalytics}]]*/ false;
-        const isAdmin = /*[[${isAdminAnalytics}]]*/ false;
+        const isNetwork = /*[[${isNetworkAnalytics}]]*/ false;
         const networkView = /*[[${networkView}]]*/ false;
-        const showCategoryChart = isManager || (isAdmin && !networkView);
+        const showCategoryChart = isManager || (isNetwork && !networkView);
 
         new Chart(document.getElementById('chartRevenue'), {
             type: 'line',

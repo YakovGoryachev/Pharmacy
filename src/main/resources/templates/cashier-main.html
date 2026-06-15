@@ -78,7 +78,7 @@
                     </div>
 
                     <div class="table-responsive" th:if="${!catalogRows.isEmpty()}">
-                        <table class="data-table">
+                        <table class="data-table pos-catalog-table">
                             <thead>
                             <tr>
                                 <th>Торговая марка</th>
@@ -106,15 +106,17 @@
                                     <span th:text="${row.pharmacyName}">аптека</span>
                                     <span th:if="${row.pharmacyId == userPharmacyId}" class="badge badge-success text-xs" style="margin-left:0.25rem">ваша</span>
                                 </td>
-                                <td>
-                                    <form th:action="@{/cashier/add}" method="post" class="input-group" style="justify-content:flex-end"
+                                <td class="actions-cell">
+                                    <form th:action="@{/cashier/add}" method="post" class="pos-add-form"
                                           th:if="${row.canAddToCart}">
                                         <input type="hidden" name="nomenclatureId" th:value="${row.nomenclatureId}"/>
-                                        <input type="number" name="quantity" value="1" min="1"
-                                               th:max="${row.availableQty}" class="form-control" style="width:4rem"/>
-                                        <input th:if="${row.marked}" type="text" name="markingCode" class="form-control"
-                                               style="width:10rem" placeholder="Data Matrix" required/>
-                                        <button type="submit" class="btn btn-sm btn-primary">В чек</button>
+                                        <div class="pos-add-form-row">
+                                            <input type="number" name="quantity" value="1" min="1"
+                                                   th:max="${row.availableQty}" class="form-control"/>
+                                            <button type="submit" class="btn btn-sm btn-primary">В чек</button>
+                                        </div>
+                                        <input th:if="${row.marked}" type="text" name="markingCode"
+                                               class="form-control pos-marking-input" placeholder="Data Matrix" required/>
                                     </form>
                                     <span th:if="${!row.canAddToCart}" class="text-xs text-muted">
                                         Продажа только в своей аптеке

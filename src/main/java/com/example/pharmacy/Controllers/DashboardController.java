@@ -35,7 +35,7 @@ public class DashboardController {
                             Model model) {
         User user = SecurityUtils.currentUser();
         String role = user.getRole().getName();
-        boolean isAdminAnalytics = RoleName.ADMIN.equals(role) || RoleName.TEST.equals(role);
+        boolean isNetworkAnalytics = RoleName.hasNetworkScope(role);
         boolean isManagerAnalytics = RoleName.MANAGER.equals(role);
 
         ZoneId zone = ZoneId.systemDefault();
@@ -47,7 +47,7 @@ public class DashboardController {
                 : toInstant.minus(30, ChronoUnit.DAYS);
 
         Long effectivePharmacyId;
-        if (isAdminAnalytics) {
+        if (isNetworkAnalytics) {
             effectivePharmacyId = pharmacyId;
             model.addAttribute("pharmacies", pharmacyRepository.findByActiveTrue());
             model.addAttribute("selectedPharmacyId", pharmacyId);
@@ -77,11 +77,11 @@ public class DashboardController {
 
         model.addAttribute("fromDate", fromInstant.atZone(zone).toLocalDate());
         model.addAttribute("toDate", toInstant.atZone(zone).toLocalDate());
-        model.addAttribute("isAdminAnalytics", isAdminAnalytics);
+        model.addAttribute("isNetworkAnalytics", isNetworkAnalytics);
         model.addAttribute("isManagerAnalytics", isManagerAnalytics);
         model.addAttribute("networkView", Boolean.FALSE);
 
-        if (isAdminAnalytics || isManagerAnalytics) {
+        if (isNetworkAnalytics || isManagerAnalytics) {
             model.addAttribute("analytics", reportService.buildPharmacyAnalytics(
                     effectivePharmacyId, fromInstant, toInstant));
             model.addAttribute("showDetailedAnalytics", true);

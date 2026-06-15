@@ -29,15 +29,17 @@ public class WriteOffService {
 
     @Transactional
     @Audited(entity = "WriteOffDocument", action = "WRITE_OFF")
-    public WriteOffDocument writeOff(Long pharmacyId, Long batchId, int quantity,
+    public WriteOffDocument writeOff(Long pharmacyId, String batchNumber, int quantity,
                                      WriteOffReason reason, String comment, User user) {
         if (quantity <= 0) {
             throw new BusinessException("Количество должно быть больше нуля");
         }
-        stockService.writeOff(pharmacyId, batchId, quantity);
+        Batch batch = batchRepository.findByBatchNumber(batchNumber.trim())
+                .orElseThrow(() -> new BusinessException("Партия не найдена: " + batchNumber));
+        stockService.writeOff(pharmacyId, batch.getId(), quantity);
         WriteOffDocument doc = new WriteOffDocument();
         doc.setPharmacy(pharmacyRepository.findById(pharmacyId).orElseThrow());
-        doc.setBatch(batchRepository.findById(batchId).orElseThrow());
+        doc.setBatch(batch);
         doc.setQuantity(quantity);
         doc.setReason(reason);
         doc.setComment(comment);

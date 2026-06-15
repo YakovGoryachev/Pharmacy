@@ -3,11 +3,11 @@
       th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
 <section th:fragment="section" class="card">
     <form th:action="@{/batches/writeoff}" method="post">
-        <div class="form-group"><label>ID партии</label><input name="batchId" type="number" class="form-control" required/></div>
+        <div class="form-group"><label>Номер партии</label><input name="batchNumber" type="text" class="form-control" required placeholder="Например, BATCH-001"/></div>
         <div class="form-group"><label>Количество</label><input name="quantity" type="number" min="1" class="form-control" required/></div>
         <div class="form-group"><label>Причина</label>
             <select name="reason" class="form-control">
-                <option th:each="r : ${reasons}" th:value="${r}" th:text="${r}"></option>
+                <option th:each="r : ${reasons}" th:value="${r}" th:text="${r.label}"></option>
             </select>
         </div>
         <div class="form-group"><label>Комментарий</label><textarea name="comment" class="form-control"></textarea></div>

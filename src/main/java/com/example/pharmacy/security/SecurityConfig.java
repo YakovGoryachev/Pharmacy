@@ -1,5 +1,6 @@
 package com.example.pharmacy.security;
 
+import com.example.pharmacy.Pojo.RoleName;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -31,14 +32,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/categories/**").hasAnyRole("MANAGER", "ADMIN", "TEST")
                         .requestMatchers("/login", "/css/**", "/static/**", "/api/atx/**", "/api/nomenclature/**").permitAll()
-                        .requestMatchers("/dashboard").hasAnyRole("PHARMACIST", "MANAGER", "ADMIN", "ACCOUNTANT", "TEST")
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "TEST")
-                        .requestMatchers("/cashier/**").hasAnyRole("PHARMACIST", "TEST")
+                        .requestMatchers("/admin/users", "/admin/users/**")
+                        .hasAnyRole(RoleName.ADMIN, RoleName.TEST)
+                        .requestMatchers("/admin/audit", "/admin/audit/**")
+                        .hasAnyRole(RoleName.ADMIN, RoleName.TEST)
+                        .requestMatchers("/admin/pharmacies", "/admin/pharmacies/**")
+                        .hasAnyRole(RoleName.DIRECTOR, RoleName.NETWORK_OWNER, RoleName.TEST)
+                        .requestMatchers("/api/categories/**")
+                        .hasAnyRole(RoleName.MANAGER, RoleName.DIRECTOR, RoleName.NETWORK_OWNER, RoleName.TEST)
+                        .requestMatchers("/dashboard")
+                        .hasAnyRole(RoleName.PHARMACIST, RoleName.MANAGER, RoleName.DIRECTOR,
+                                RoleName.NETWORK_OWNER, RoleName.ACCOUNTANT, RoleName.TEST)
+                        .requestMatchers("/cashier/**").hasAnyRole(RoleName.PHARMACIST, RoleName.TEST)
                         .requestMatchers("/batches", "/batches/**",
-                                "/nomenclature", "/nomenclature/**").hasAnyRole("MANAGER", "ADMIN", "TEST")
-                        .requestMatchers("/reports/**").hasAnyRole("MANAGER", "ADMIN", "ACCOUNTANT", "TEST")
+                                "/nomenclature", "/nomenclature/**")
+                        .hasAnyRole(RoleName.MANAGER, RoleName.DIRECTOR, RoleName.NETWORK_OWNER, RoleName.TEST)
+                        .requestMatchers("/reports/**")
+                        .hasAnyRole(RoleName.MANAGER, RoleName.DIRECTOR, RoleName.NETWORK_OWNER,
+                                RoleName.ACCOUNTANT, RoleName.TEST)
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

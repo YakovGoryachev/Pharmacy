@@ -291,7 +291,22 @@ textarea.form-control { min-height: 100px; resize: vertical; }
 /* =========================================
    🏥 ARM POS (Фармацевт-Кассир)
    ========================================= */
-.pos-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; height: calc(100vh - 14rem); }
+.pos-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 400px);
+  gap: 1.5rem;
+  height: calc(100vh - 14rem);
+}
+.pos-layout > :first-child {
+  min-width: 0;
+}
+.pos-catalog-table {
+  table-layout: fixed;
+}
+.pos-catalog-table th:last-child,
+.pos-catalog-table td:last-child {
+  width: 12.5rem;
+}
 .pos-search-bar { position: relative; margin-bottom: 1rem; }
 .pos-search-bar .form-control { padding-left: 2.8rem; border-radius: var(--radius-lg); }
 .pos-search-bar .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
@@ -305,7 +320,44 @@ textarea.form-control { min-height: 100px; resize: vertical; }
 .pos-item-price { font-weight: 700; color: var(--primary); margin-top: auto; padding-top: 0.5rem; font-size: 1.1rem; }
 .pos-item-stock { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
 
-.pos-cart { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-surface); overflow: hidden; }
+.pos-cart {
+  display: flex;
+  flex-direction: column;
+  min-width: 360px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.pos-add-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 12rem;
+  margin-left: auto;
+}
+.pos-add-form-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+.pos-add-form-row .form-control[type="number"] {
+  width: 3.25rem;
+  min-width: 3.25rem;
+  flex: 0 0 3.25rem;
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+}
+.pos-add-form-row .btn {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+.pos-marking-input {
+  width: 100%;
+  font-size: 0.8rem;
+}
 .pos-cart-header { padding: 1rem; border-bottom: 1px solid var(--border); background: #f8fafc; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
 .pos-cart-items { flex: 1; overflow-y: auto; padding: 0.5rem 1rem; }
 .pos-cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; }
@@ -371,6 +423,7 @@ textarea.form-control { min-height: 100px; resize: vertical; }
    ========================================= */
 @media (max-width: 1024px) {
   .pos-layout { grid-template-columns: 1fr; height: auto; }
+  .pos-cart { min-width: 0; }
   .pos-product-grid { max-height: 400px; }
   .sidebar { position: fixed; transform: translateX(-100%); z-index: 999; }
   .sidebar.open { transform: translateX(0); }

@@ -51,7 +51,7 @@ public class CategoryService {
         if (dto.getName() == null || dto.getName().isBlank()) {
             throw new BusinessException("Укажите название категории");
         }
-        boolean admin = isAdminOrTest();
+        boolean admin = canManageSystemCategories();
         if (dto.getId() != null) {
             NomenclatureCategory existing = categoryRepository.findById(dto.getId())
                     .orElseThrow(() -> new BusinessException("Категория не найдена"));
@@ -80,15 +80,21 @@ public class CategoryService {
     public void delete(Long id) {
         NomenclatureCategory cat = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Категория не найдена"));
-        if (cat.isSystem() && !isAdminOrTest()) {
-            throw new BusinessException("Системную категорию может удалить только администратор");
+        if (cat.isSystem() && !canManageSystemCategories()) {
+            throw new BusinessException("Системную категорию может удалить только директор или владелец сети");
         }
         categoryRepository.delete(cat);
     }
 
-    public boolean isAdminOrTest() {
+    public boolean canManageSystemCategories() {
         String role = SecurityUtils.currentUser().getRole().getName();
-        return RoleName.ADMIN.equals(role) || RoleName.TEST.equals(role);
+        return RoleName.canManageSystemCategories(role);
+    }
+
+    /** @deprecated используйте {@link #canManageSystemCategories()} */
+    @Deprecated
+    public boolean isAdminOrTest() {
+        return canManageSystemCategories();
     }
 
     private NomenclatureCategoryDto mapToDto(NomenclatureCategory nc) {

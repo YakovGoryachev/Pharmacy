@@ -6,7 +6,7 @@
         <a th:href="@{/dashboard}">Главная</a> <span class="breadcrumb-sep">/</span> <span>Отчёты</span>
     </div>
 
-    <div sec:authorize="hasRole('ACCOUNTANT')" class="alert alert-info">
+    <div sec:authorize="hasRole('БУХГАЛТЕР')" class="alert alert-info">
         Режим бухгалтера: формирование PDF-отчётов и история загрузок.
     </div>
 

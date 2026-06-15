@@ -2,12 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>Вход — PharmaControl</title>
+    <title>Вход — АИС «ФармаСеть»</title>
     <link rel="stylesheet" th:href="@{/css/style-uni.css}"/>
 </head>
 <body class="login-page" style="display:flex;align-items:center;justify-content:center;min-height:100vh">
 <div class="card" style="width:400px;padding:2rem">
-    <h1 style="margin-bottom:1rem">PharmaControl</h1>
+    <h1 style="margin-bottom:1rem">АИС «ФармаСеть»</h1>
     <div th:if="${param.error}" class="alert alert-danger">Неверный логин или пароль</div>
     <div th:if="${param.logout}" class="alert alert-success">Вы вышли из системы</div>
     <form th:action="@{/login}" method="post">
@@ -22,7 +22,7 @@
         <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1.5rem">Войти</button>
     </form>
     <p style="margin-top:1rem;font-size:0.85rem;color:#64748b">
-        Демо: pharm1/pharm123, manager1/mgr123, admin/admin123, accountant/acc123
+        Демо: pharm1/pharm123, manager1/mgr123, director/dir123, owner/owner123, admin/admin123, accountant/acc123
     </p>
 </div>
 </body>

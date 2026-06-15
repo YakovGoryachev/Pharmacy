@@ -16,48 +16,48 @@
         <div class="sidebar-header"><span>Ф</span> ФармаСеть</div>
         <nav class="sidebar-nav">
             <a class="nav-link" th:href="@{/dashboard}"
-               sec:authorize="hasAnyRole('PHARMACIST','MANAGER','ADMIN','ACCOUNTANT','TEST')"
+               sec:authorize="hasAnyRole('ПЕРВОСТОЛЬНИК','ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','БУХГАЛТЕР','ТЕСТ')"
                th:classappend="${activeNav == 'dashboard'} ? ' active' : ''">
                 <span class="nav-icon">📊</span> Дашборд
             </a>
             <a class="nav-link" th:href="@{/cashier}"
-               sec:authorize="hasAnyRole('PHARMACIST','TEST')"
+               sec:authorize="hasAnyRole('ПЕРВОСТОЛЬНИК','ТЕСТ')"
                th:classappend="${activeNav == 'cashier'} ? ' active' : ''">
-                <span class="nav-icon">🛒</span> АРМ Кассира
+                <span class="nav-icon">🛒</span> АРМ кассира
             </a>
             <a class="nav-link" th:href="@{/batches}"
-               sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')"
+               sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')"
                th:classappend="${activeNav == 'batches'} ? ' active' : ''">
-                <span class="nav-icon">📦</span> Склад и Партии
+                <span class="nav-icon">📦</span> Склад и партии
             </a>
             <a class="nav-link" th:href="@{/nomenclature}"
-               sec:authorize="hasAnyRole('MANAGER','ADMIN','TEST')"
+               sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')"
                th:classappend="${activeNav == 'nomenclature'} ? ' active' : ''">
                 <span class="nav-icon">💊</span> Номенклатура
             </a>
             <a class="nav-link" th:href="@{/reports}"
-               sec:authorize="hasAnyRole('MANAGER','ADMIN','ACCOUNTANT','TEST')"
+               sec:authorize="hasAnyRole('ЗАВЕДУЮЩИЙ','ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','БУХГАЛТЕР','ТЕСТ')"
                th:classappend="${activeNav == 'reports'} ? ' active' : ''">
                 <span class="nav-icon">📈</span> Отчёты
             </a>
             <a class="nav-link" th:href="@{/admin/pharmacies}"
-               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               sec:authorize="hasAnyRole('ДИРЕКТОР','ВЛАДЕЛЕЦ_СЕТИ','ТЕСТ')"
                th:classappend="${activeNav == 'pharmacies'} ? ' active' : ''">
                 <span class="nav-icon">🏥</span> Аптеки
             </a>
             <a class="nav-link" th:href="@{/admin/users}"
-               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               sec:authorize="hasAnyRole('АДМИНИСТРАТОР','ТЕСТ')"
                th:classappend="${activeNav == 'admin'} ? ' active' : ''">
                 <span class="nav-icon">👤</span> Пользователи
             </a>
             <a class="nav-link" th:href="@{/admin/audit}"
-               sec:authorize="hasAnyRole('ADMIN','TEST')"
+               sec:authorize="hasAnyRole('АДМИНИСТРАТОР','ТЕСТ')"
                th:classappend="${activeNav == 'audit'} ? ' active' : ''">
-                <span class="nav-icon">🔐</span> Аудит
+                <span class="nav-icon">🔐</span> Журнал аудита
             </a>
         </nav>
         <div class="sidebar-footer">
-            <div sec:authentication="name">user</div>
+            <div sec:authentication="name">пользователь</div>
             <form th:action="@{/logout}" method="post" style="margin-top:0.5rem">
                 <button type="submit" class="btn btn-sm btn-secondary">Выход</button>
             </form>
@@ -68,16 +68,19 @@
         <header class="topbar">
             <h1 class="topbar-title" th:text="${pageTitle}">Страница</h1>
             <div class="topbar-actions">
-                <span class="badge badge-info" sec:authorize="hasRole('TEST')">Тест: все разделы</span>
-                <span class="badge badge-neutral" sec:authorize="hasRole('PHARMACIST')">Первостольник</span>
-                <span class="badge badge-neutral" sec:authorize="hasRole('MANAGER')">Заведующий</span>
-                <span class="badge badge-neutral" sec:authorize="hasRole('ADMIN')">Администратор</span>
+                <span class="badge badge-info" sec:authorize="hasRole('ТЕСТ')">Тест: все разделы</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('ПЕРВОСТОЛЬНИК')">Первостольник</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('ЗАВЕДУЮЩИЙ')">Заведующий</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('ДИРЕКТОР')">Директор</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('ВЛАДЕЛЕЦ_СЕТИ')">Владелец сети</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('БУХГАЛТЕР')">Бухгалтер</span>
+                <span class="badge badge-neutral" sec:authorize="hasRole('АДМИНИСТРАТОР')">Администратор</span>
                 <div class="account-menu" sec:authorize="isAuthenticated()" tabindex="0">
                     <button type="button" class="user-avatar account-trigger" th:text="${userInitials}">U</button>
                     <div class="account-dropdown">
                         <div class="account-dropdown-header">
                             <strong th:text="${currentUserName}">Пользователь</strong>
-                            <span class="text-sm text-muted" th:text="|@${currentUserLogin}|">login</span>
+                            <span class="text-sm text-muted" th:text="|@${currentUserLogin}|">логин</span>
                         </div>
                         <div class="account-dropdown-body">
                             <div class="account-row">

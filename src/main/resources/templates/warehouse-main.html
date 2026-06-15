@@ -14,7 +14,7 @@
                     <i class="fas fa-plus"></i> Приёмка ЛП
                 </a>
                 <a th:href="@{/batches/expiring}" class="btn btn-sm btn-warning">Сроки</a>
-                <a th:href="@{/batches/writeoff}" class="btn btn-sm btn-danger" sec:authorize="!hasRole('ADMIN')">Списание</a>
+                <a th:href="@{/batches/writeoff}" class="btn btn-sm btn-danger">Списание</a>
                 <a th:href="@{/batches/transfer}" class="btn btn-sm btn-secondary">Перемещение</a>
                 <a th:href="@{/batches/inventory}" class="btn btn-sm btn-secondary">Инвентаризация</a>
                 <a th:href="@{/batches/marking}" class="btn btn-sm btn-secondary">Маркировка</a>

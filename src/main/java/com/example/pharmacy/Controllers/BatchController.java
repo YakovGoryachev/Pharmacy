@@ -137,7 +137,7 @@ public class BatchController {
 
     @GetMapping("/expiring")
     public String expiring(@RequestParam(defaultValue = "30") int days, Model model) {
-        boolean networkView = SecurityUtils.isAdmin();
+        boolean networkView = SecurityUtils.hasNetworkScope();
         Long pharmacyId = networkView ? null : SecurityUtils.currentPharmacyId();
         model.addAttribute("stocks", stockService.findExpiring(pharmacyId, days));
         model.addAttribute("networkView", networkView);
@@ -148,7 +148,7 @@ public class BatchController {
 
     @GetMapping("/writeoff")
     public String writeOffForm(Model model) {
-        if (SecurityUtils.isAdmin()) {
+        if (!SecurityUtils.hasAssignedPharmacy()) {
             return "redirect:/batches";
         }
         model.addAttribute("pharmacyId", SecurityUtils.currentPharmacyId());
@@ -158,16 +158,16 @@ public class BatchController {
     }
 
     @PostMapping("/writeoff")
-    public String writeOff(@RequestParam Long batchId,
+    public String writeOff(@RequestParam String batchNumber,
                            @RequestParam int quantity,
                            @RequestParam WriteOffReason reason,
                            @RequestParam(required = false) String comment,
                            RedirectAttributes ra) {
-        if (SecurityUtils.isAdmin()) {
+        if (!SecurityUtils.hasAssignedPharmacy()) {
             return "redirect:/batches";
         }
         Long pharmacyId = SecurityUtils.currentPharmacyId();
-        writeOffService.writeOff(pharmacyId, batchId, quantity, reason, comment, SecurityUtils.currentUser());
+        writeOffService.writeOff(pharmacyId, batchNumber, quantity, reason, comment, SecurityUtils.currentUser());
         ra.addFlashAttribute("successMessage", "Списание оформлено");
         return "redirect:/batches";
     }
@@ -182,11 +182,11 @@ public class BatchController {
     @PostMapping("/transfer")
     public String transfer(@RequestParam Long fromPharmacyId,
                            @RequestParam Long toPharmacyId,
-                           @RequestParam Long batchId,
+                           @RequestParam String batchNumber,
                            @RequestParam int quantity,
                            @RequestParam String waybillNumber,
                            RedirectAttributes ra) {
-        stockService.transfer(fromPharmacyId, toPharmacyId, batchId, quantity, waybillNumber, SecurityUtils.currentUser());
+        stockService.transfer(fromPharmacyId, toPharmacyId, batchNumber, quantity, waybillNumber, SecurityUtils.currentUser());
         ra.addFlashAttribute("successMessage", "Перемещение выполнено");
         return "redirect:/batches";
     }

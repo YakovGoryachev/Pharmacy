@@ -32,8 +32,10 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
             userRepository.save(user);
             String role = user.getRole().getName();
             String target = switch (role) {
-                case RoleName.TEST, RoleName.MANAGER, RoleName.ADMIN, RoleName.ACCOUNTANT -> "/dashboard";
+                case RoleName.ADMIN -> "/admin/users";
                 case RoleName.PHARMACIST -> "/cashier";
+                case RoleName.TEST, RoleName.MANAGER, RoleName.DIRECTOR,
+                     RoleName.NETWORK_OWNER, RoleName.ACCOUNTANT -> "/dashboard";
                 default -> "/dashboard";
             };
             response.sendRedirect(target);

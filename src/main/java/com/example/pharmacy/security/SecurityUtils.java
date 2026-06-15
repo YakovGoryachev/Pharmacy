@@ -19,7 +19,7 @@ public final class SecurityUtils {
         throw new IllegalStateException("Пользователь не авторизован");
     }
 
-    public static boolean isAdmin() {
+    public static boolean isSystemAdmin() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return false;
@@ -28,11 +28,26 @@ public final class SecurityUtils {
                 .anyMatch(a -> ("ROLE_" + RoleName.ADMIN).equals(a.getAuthority()));
     }
 
-    public static boolean isAdmin(User user) {
-        if (user.getRole() != null && RoleName.ADMIN.equals(user.getRole().getName())) {
+    public static boolean isSystemAdmin(User user) {
+        if (user.getRole() != null && RoleName.isSystemAdmin(user.getRole().getName())) {
             return true;
         }
-        return isAdmin();
+        return isSystemAdmin();
+    }
+
+    /** @deprecated используйте {@link #isSystemAdmin()} */
+    @Deprecated
+    public static boolean isAdmin() {
+        return isSystemAdmin();
+    }
+
+    public static boolean hasNetworkScope() {
+        User user = currentUser();
+        return user.getRole() != null && RoleName.hasNetworkScope(user.getRole().getName());
+    }
+
+    public static boolean hasAssignedPharmacy() {
+        return currentUser().getPharmacy() != null;
     }
 
     public static Long currentPharmacyId() {
@@ -43,7 +58,7 @@ public final class SecurityUtils {
         return user.getPharmacy().getId();
     }
 
-    /** Аптека пользователя или первая активная (для отчётов/дашборда без привязки). */
+    /** Аптека пользователя или первая активная (для отчётов и дашборда без привязки). */
     public static Long resolvePharmacyId(PharmacyRepository pharmacyRepository) {
         User user = currentUser();
         if (user.getPharmacy() != null) {

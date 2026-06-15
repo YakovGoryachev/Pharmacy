@@ -27,7 +27,9 @@ public class DataInitializer {
                            MarkingCodeRepository markingCodeRepository,
                            PasswordEncoder passwordEncoder) {
         return args -> {
+            migrateRoles(rolesRepository);
             ensureTestUser(rolesRepository, userRepository, pharmacyRepository, passwordEncoder);
+            ensureLeadershipUsers(rolesRepository, userRepository, pharmacyRepository, passwordEncoder);
 
             if (nomenclatureRepository.count() > 0) {
                 return;
@@ -41,8 +43,10 @@ public class DataInitializer {
             if (userRepository.count() == 0) {
                 pharmacist = role(rolesRepository, RoleName.PHARMACIST, "Первостольник");
                 manager = role(rolesRepository, RoleName.MANAGER, "Заведующий аптекой");
-                role(rolesRepository, RoleName.ADMIN, "Администратор");
+                role(rolesRepository, RoleName.ADMIN, "Системный администратор");
                 role(rolesRepository, RoleName.ACCOUNTANT, "Бухгалтер");
+                role(rolesRepository, RoleName.DIRECTOR, "Директор");
+                role(rolesRepository, RoleName.NETWORK_OWNER, "Владелец аптечной сети");
                 role(rolesRepository, RoleName.TEST, "Тест: все разделы");
 
                 p1 = pharmacy(pharmacyRepository, "Аптека №1 Центральная", "Муром, ул. Ленина, 1");
@@ -125,6 +129,49 @@ public class DataInitializer {
             mc.setBatch(b2);
             markingCodeRepository.save(mc);
         };
+    }
+
+    private static void migrateRoles(RolesRepository rolesRepository) {
+        java.util.Map<String, String> legacyNames = java.util.Map.of(
+                "PHARMACIST", RoleName.PHARMACIST,
+                "MANAGER", RoleName.MANAGER,
+                "ADMIN", RoleName.ADMIN,
+                "ACCOUNTANT", RoleName.ACCOUNTANT,
+                "TEST", RoleName.TEST
+        );
+        legacyNames.forEach((legacy, current) ->
+                rolesRepository.findByName(legacy).ifPresent(role -> {
+                    role.setName(current);
+                    rolesRepository.save(role);
+                }));
+        ensureRole(rolesRepository, RoleName.DIRECTOR, "Директор");
+        ensureRole(rolesRepository, RoleName.NETWORK_OWNER, "Владелец аптечной сети");
+        ensureRole(rolesRepository, RoleName.ADMIN, "Системный администратор");
+        ensureRole(rolesRepository, RoleName.PHARMACIST, "Первостольник");
+        ensureRole(rolesRepository, RoleName.MANAGER, "Заведующий аптекой");
+        ensureRole(rolesRepository, RoleName.ACCOUNTANT, "Бухгалтер");
+        ensureRole(rolesRepository, RoleName.TEST, "Тест: все разделы");
+    }
+
+    private static void ensureRole(RolesRepository repo, String name, String description) {
+        repo.findByName(name).orElseGet(() -> role(repo, name, description));
+    }
+
+    private static void ensureLeadershipUsers(RolesRepository rolesRepository,
+                                              UserRepository userRepository,
+                                              PharmacyRepository pharmacyRepository,
+                                              PasswordEncoder passwordEncoder) {
+        Roles director = rolesRepository.findByName(RoleName.DIRECTOR).orElseThrow();
+        Roles owner = rolesRepository.findByName(RoleName.NETWORK_OWNER).orElseThrow();
+        Pharmacy pharmacy = pharmacyRepository.findByActiveTrue().stream()
+                .findFirst()
+                .orElseGet(() -> pharmacy(pharmacyRepository, "Аптека №1 Центральная", "Муром, ул. Ленина, 1"));
+        if (!userRepository.existsByLogin("director")) {
+            user(userRepository, "director", "dir123", "Директор сети", director, pharmacy, passwordEncoder);
+        }
+        if (!userRepository.existsByLogin("owner")) {
+            user(userRepository, "owner", "owner123", "Владелец аптечной сети", owner, null, passwordEncoder);
+        }
     }
 
     private static Roles role(RolesRepository repo, String name, String desc) {
