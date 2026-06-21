@@ -50,7 +50,7 @@ public class NomenclatureDto {
     private String productCategoryName;
 
     private String displayText;
-    /** Доступно в текущей аптеке (для кассы), не хранится в БД */
+    private String formOfReleaseLabel;
     private Integer availableQty;
 
     public Integer getAvailableQty() {
@@ -67,6 +67,14 @@ public class NomenclatureDto {
 
     public void setDisplayText(String displayText) {
         this.displayText = displayText;
+    }
+
+    public String getFormOfReleaseLabel() {
+        return formOfReleaseLabel;
+    }
+
+    public void setFormOfReleaseLabel(String formOfReleaseLabel) {
+        this.formOfReleaseLabel = formOfReleaseLabel;
     }
 
     public String getDosageUnit() {

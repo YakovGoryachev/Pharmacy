@@ -6,6 +6,7 @@ import com.example.pharmacy.Pojo.Nomenclature;
 import com.example.pharmacy.Pojo.Stock;
 import com.example.pharmacy.Repository.NomenclatureRepository;
 import com.example.pharmacy.Repository.StockRepository;
+import com.example.pharmacy.util.FormOfReleaseLabels;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -169,6 +170,9 @@ public class CashierCatalogService {
         row.setPharmacyId(pharmacyId);
         row.setPharmacyName(pharmacyName);
         row.setReceipt(n.getReceipt());
+        row.setNarcotic(n.getNarcotic());
+        row.setPsychotropic(n.getPsychotropic());
+        row.setReceiptRequired(n.requiresPrescription());
         row.setMarked(n.getMarked());
         row.setCanAddToCart(userPharmacyId != null && userPharmacyId.equals(pharmacyId) && available > 0);
         return row;
@@ -177,7 +181,7 @@ public class CashierCatalogService {
     private static String formatDosage(Nomenclature n) {
         StringBuilder sb = new StringBuilder();
         if (n.getFormOfRelease() != null && !n.getFormOfRelease().isBlank()) {
-            sb.append(formLabel(n.getFormOfRelease()));
+            sb.append(FormOfReleaseLabels.shortLabel(n.getFormOfRelease()));
         }
         if (n.getDosage() != null) {
             if (!sb.isEmpty()) {
@@ -195,27 +199,6 @@ public class CashierCatalogService {
             sb.append(n.getQuantityInPack()).append(" шт/уп.");
         }
         return sb.isEmpty() ? "—" : sb.toString();
-    }
-
-    private static String formLabel(String code) {
-        return switch (code) {
-            case "TABLET" -> "таб.";
-            case "CAPSULE" -> "капс.";
-            case "SOLUTION" -> "р-р";
-            case "OINTMENT" -> "мазь";
-            case "SYRUP" -> "сироп";
-            case "DROPS" -> "капли";
-            case "SPRAY" -> "спрей";
-            case "POWDER" -> "пор.";
-            case "INJECTION" -> "инъек.";
-            case "PIECE" -> "шт.";
-            case "PACK" -> "уп.";
-            case "BOTTLE" -> "фл.";
-            case "TUBE" -> "туба";
-            case "BOX" -> "кор.";
-            case "SET" -> "набор";
-            default -> code;
-        };
     }
 
     private Comparator<CashierProductRowDto> buildComparator(String sort, String dir) {

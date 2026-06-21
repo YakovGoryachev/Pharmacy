@@ -5,6 +5,7 @@ import com.example.pharmacy.Pojo.AtcManual;
 import com.example.pharmacy.Pojo.Nomenclature;
 import com.example.pharmacy.Pojo.NomenclatureCategory;
 import com.example.pharmacy.Pojo.ProductType;
+import com.example.pharmacy.util.FormOfReleaseLabels;
 import com.example.pharmacy.Repository.AtcManualRepository;
 import com.example.pharmacy.Repository.BatchRepository;
 import com.example.pharmacy.Repository.CategoryRepository;
@@ -100,6 +101,7 @@ public class NomenclatureService {
         nmd.setMnn(nm.getMnn());
         nmd.setBrandName(nm.getBrandName());
         nmd.setFormOfRelease(nm.getFormOfRelease());
+        nmd.setFormOfReleaseLabel(FormOfReleaseLabels.label(nm.getFormOfRelease()));
         nmd.setDosage(nm.getDosage());
         nmd.setDosageUnit(nm.getDosageUnit());
         nmd.setQtyInPack(nm.getQuantityInPack());
@@ -141,9 +143,9 @@ public class NomenclatureService {
                 am = atcManualRepository.findByCode(nmd.getAtxCode());
             }
             nm.setMnn(nmd.getMnn());
-            nm.setReceipt(nmd.getReceipt());
-            nm.setNarcotic(nmd.getNarcotic());
-            nm.setPsychotropic(nmd.getPsychotropic());
+            nm.setNarcotic(Boolean.TRUE.equals(nmd.getNarcotic()));
+            nm.setPsychotropic(Boolean.TRUE.equals(nmd.getPsychotropic()));
+            nm.setReceipt(Boolean.TRUE.equals(nmd.getReceipt()) || nm.getNarcotic() || nm.getPsychotropic());
         } else {
             nm.setMnn(nmd.getMnn() != null && !nmd.getMnn().isBlank() ? nmd.getMnn() : null);
             nm.setReceipt(false);
@@ -170,13 +172,25 @@ public class NomenclatureService {
     private String buildDisplayText(Nomenclature nm) {
         if (!ProductType.MEDICINE.name().equals(nm.getProductType())) {
             String text = nm.getBrandName();
+            if (nm.getFormOfRelease() != null && !nm.getFormOfRelease().isBlank()) {
+                text += ", " + FormOfReleaseLabels.label(nm.getFormOfRelease());
+            }
             if (nm.getQuantityInPack() != null) {
                 text += ", " + nm.getQuantityInPack() + " шт.";
             }
             return text;
         }
-        return nm.getBrandName()
-                + (nm.getDosage() != null ? " " + nm.getDosage() : "")
-                + (nm.getDosageUnit() != null ? " " + nm.getDosageUnit() : "");
+        String form = FormOfReleaseLabels.shortLabel(nm.getFormOfRelease());
+        StringBuilder sb = new StringBuilder(nm.getBrandName());
+        if (form != null && !form.isBlank()) {
+            sb.append(" ").append(form);
+        }
+        if (nm.getDosage() != null) {
+            sb.append(" ").append(nm.getDosage());
+            if (nm.getDosageUnit() != null) {
+                sb.append(" ").append(nm.getDosageUnit());
+            }
+        }
+        return sb.toString();
     }
 }

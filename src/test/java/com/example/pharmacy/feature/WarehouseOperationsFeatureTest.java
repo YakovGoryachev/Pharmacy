@@ -84,6 +84,7 @@ class WarehouseOperationsFeatureTest {
         void createReceipt() {
             BatchDto dto = batchDto(10);
 
+            when(batchRepository.findByBatchNumber("П-001")).thenReturn(Optional.empty());
             when(nomenclatureRepository.findById(100L)).thenReturn(Optional.of(nomenclature));
             when(batchRepository.save(any())).thenAnswer(inv -> {
                 Batch b = inv.getArgument(0);
@@ -99,6 +100,25 @@ class WarehouseOperationsFeatureTest {
 
             assertEquals("П-001", saved.getBatchNumber());
             verify(stockRepository).save(argThat(s -> s.getQuantity() == 10));
+        }
+
+        @Test
+        @DisplayName("Create — дубликат номера партии запрещён")
+        void createDuplicateBatchNumber() {
+            BatchDto dto = batchDto(10);
+            when(batchRepository.findByBatchNumber("П-001")).thenReturn(Optional.of(batch));
+
+            assertThrows(BusinessException.class, () -> batchService.saveWithStock(dto, 1L));
+        }
+
+        @Test
+        @DisplayName("Delete — удаление только списанной партии")
+        void deleteOnlyWrittenOff() {
+            batch.setWrittenOff(false);
+            when(batchRepository.findById(10L)).thenReturn(Optional.of(batch));
+
+            assertThrows(BusinessException.class, () -> batchService.deleteById(10L));
+            verify(batchRepository, never()).delete(any(Batch.class));
         }
 
         @Test

@@ -106,8 +106,9 @@
                 <div class="form-group">
                   <label class="form-label">Зона хранения</label>
                   <select th:field="*{storageZone}" class="form-control" required>
+                    <option value="Зал">Зал</option>
                     <option value="ROOM_TEMP">Комнатная температура</option>
-                    <option value="FRIDGE">Холодильник (2-8°C)</option>
+                    <option value="FRIDGE">Холодильник (2–8°C)</option>
                     <option value="DARK">Тёмное место</option>
                     <option value="FREEZER">Морозильная камера</option>
                   </select>
@@ -193,7 +194,7 @@
            data-text="${escapeHtml(item.displayText)}"
            style="cursor: pointer;">
         <div class="font-bold">${escapeHtml(item.brandName)} ${item.dosage || ''} ${item.dosageUnit}</div>
-        <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${item.formOfRelease}</div>
+        <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${escapeHtml(item.formOfReleaseLabel || item.formOfRelease)}</div>
       </div>
     `).join('');
     dropdown.style.display = 'block';

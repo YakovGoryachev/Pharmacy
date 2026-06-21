@@ -17,7 +17,10 @@
             <td th:text="${u.name}">n</td>
             <td th:text="${u.role.description != null ? u.role.description : u.role.name}">r</td>
             <td th:text="${u.pharmacy != null ? u.pharmacy.name : '—'}">p</td>
-            <td><a th:href="@{'/admin/users/delete/' + ${u.id}}" class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">Удалить</a></td>
+            <td class="row-actions">
+                <a th:href="@{/admin/users/edit/{id}(id=${u.id})}" class="btn btn-sm btn-secondary">Изменить</a>
+                <a th:href="@{'/admin/users/delete/' + ${u.id}}" class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">Удалить</a>
+            </td>
         </tr>
         </tbody>
     </table>

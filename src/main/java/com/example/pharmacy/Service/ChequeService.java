@@ -5,6 +5,7 @@ import com.example.pharmacy.Repository.BatchRepository;
 import com.example.pharmacy.Repository.ChequeRepository;
 import com.example.pharmacy.Repository.NomenclatureRepository;
 import com.example.pharmacy.Repository.PharmacyRepository;
+import com.example.pharmacy.Repository.PrescriptionRepository;
 import com.example.pharmacy.DTO.CartItemDto;
 import com.example.pharmacy.DTO.PrescriptionFormDto;
 import com.example.pharmacy.audit.Audited;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -25,19 +28,22 @@ public class ChequeService {
     private final MarkingCodeService markingCodeService;
     private final PharmacyRepository pharmacyRepository;
     private final BatchRepository batchRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     public ChequeService(ChequeRepository chequeRepository,
                          NomenclatureRepository nomenclatureRepository,
                          StockService stockService,
                          MarkingCodeService markingCodeService,
                          PharmacyRepository pharmacyRepository,
-                         BatchRepository batchRepository) {
+                         BatchRepository batchRepository,
+                         PrescriptionRepository prescriptionRepository) {
         this.chequeRepository = chequeRepository;
         this.nomenclatureRepository = nomenclatureRepository;
         this.stockService = stockService;
         this.markingCodeService = markingCodeService;
         this.pharmacyRepository = pharmacyRepository;
         this.batchRepository = batchRepository;
+        this.prescriptionRepository = prescriptionRepository;
     }
 
     @Transactional
@@ -58,6 +64,8 @@ public class ChequeService {
                 throw new BusinessException("Отсканируйте код маркировки: " + item.getDisplayName());
             }
         }
+        assertUniquePrescriptionsInCart(cart);
+        assertPrescriptionsNotAlreadyDispensed(cart);
 
         Cheque cheque = new Cheque();
         cheque.setPharmacy(pharmacyRepository.findById(pharmacyId)
@@ -127,6 +135,42 @@ public class ChequeService {
         rx.setLpuCode(form.getLpuCode());
         rx.setStatus("ACTIVE");
         return rx;
+    }
+
+    private static void assertUniquePrescriptionsInCart(List<CartItemDto> cart) {
+        Map<String, String> seen = new HashMap<>();
+        for (CartItemDto item : cart) {
+            if (!item.isReceiptRequired() || item.getPrescription() == null) {
+                continue;
+            }
+            String key = item.getPrescription().identityKey();
+            if (key.equals("#")) {
+                continue;
+            }
+            String previous = seen.put(key, item.getDisplayName());
+            if (previous != null) {
+                throw new BusinessException(
+                        "Один рецепт нельзя использовать для разных препаратов: «"
+                                + previous + "» и «" + item.getDisplayName() + "»");
+            }
+        }
+    }
+
+    private void assertPrescriptionsNotAlreadyDispensed(List<CartItemDto> cart) {
+        for (CartItemDto item : cart) {
+            if (!item.isReceiptRequired() || item.getPrescription() == null) {
+                continue;
+            }
+            String number = item.getPrescription().getPrescriptionNumber();
+            if (number == null || number.isBlank()) {
+                continue;
+            }
+            if (prescriptionRepository.existsInActiveSale(number)) {
+                throw new BusinessException(
+                        "Рецепт «" + number.trim() + "» уже был использован при продаже. "
+                                + "Укажите другой рецепт для «" + item.getDisplayName() + "»");
+            }
+        }
     }
 
     public List<Cheque> salesForPeriod(Long pharmacyId, Instant from, Instant to) {

@@ -31,12 +31,7 @@ public class MarkingCode {
     private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "nomenclature_id")
-    @JsonIgnoreProperties("markingCodes")
-    private Nomenclature nomenclature;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id")
+    @JoinColumn(name = "batch_id", nullable = false)
     @JsonIgnoreProperties("markingCodes")
     private Batch batch;
 
@@ -123,14 +118,6 @@ public class MarkingCode {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Nomenclature getNomenclature() {
-        return nomenclature;
-    }
-
-    public void setNomenclature(Nomenclature nomenclature) {
-        this.nomenclature = nomenclature;
     }
 
     public Batch getBatch() {

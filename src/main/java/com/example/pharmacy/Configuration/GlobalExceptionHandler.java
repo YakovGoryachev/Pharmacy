@@ -2,6 +2,7 @@ package com.example.pharmacy.Configuration;
 
 import com.example.pharmacy.exception.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +24,17 @@ public class GlobalExceptionHandler {
         return "redirect:" + fallbackUrl(request);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public String handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request, RedirectAttributes ra) {
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/batches/create")) {
+            ra.addFlashAttribute("errorMessage", "Партия с таким номером уже есть в системе");
+            return "redirect:/batches/create";
+        }
+        ra.addFlashAttribute("errorMessage", "Операция нарушает ограничения базы данных");
+        return "redirect:" + fallbackUrl(request);
+    }
+
     private static String fallbackUrl(HttpServletRequest request) {
         String uri = request.getRequestURI();
         if (uri != null && uri.startsWith("/admin/pharmacies")) {
@@ -30,6 +42,12 @@ public class GlobalExceptionHandler {
         }
         if (uri != null && uri.startsWith("/batches/create")) {
             return "/batches/create";
+        }
+        if (uri != null && uri.startsWith("/batches")) {
+            return "/batches";
+        }
+        if (uri != null && uri.startsWith("/cashier")) {
+            return "/cashier";
         }
         if (uri != null && uri.startsWith("/nomenclature/categories")) {
             return "/nomenclature/categories";

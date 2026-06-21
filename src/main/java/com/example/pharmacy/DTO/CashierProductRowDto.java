@@ -11,7 +11,10 @@ public class CashierProductRowDto {
     private Long pharmacyId;
     private String pharmacyName;
     private Boolean receipt;
+    private Boolean narcotic;
+    private Boolean psychotropic;
     private Boolean marked;
+    private boolean receiptRequired;
     private boolean canAddToCart;
 
     public Long getNomenclatureId() {
@@ -84,6 +87,30 @@ public class CashierProductRowDto {
 
     public void setReceipt(Boolean receipt) {
         this.receipt = receipt;
+    }
+
+    public Boolean getNarcotic() {
+        return narcotic;
+    }
+
+    public void setNarcotic(Boolean narcotic) {
+        this.narcotic = narcotic;
+    }
+
+    public Boolean getPsychotropic() {
+        return psychotropic;
+    }
+
+    public void setPsychotropic(Boolean psychotropic) {
+        this.psychotropic = psychotropic;
+    }
+
+    public boolean isReceiptRequired() {
+        return receiptRequired;
+    }
+
+    public void setReceiptRequired(boolean receiptRequired) {
+        this.receiptRequired = receiptRequired;
     }
 
     public Boolean getMarked() {

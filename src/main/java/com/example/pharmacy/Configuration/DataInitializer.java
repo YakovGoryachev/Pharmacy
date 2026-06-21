@@ -27,7 +27,7 @@ public class DataInitializer {
                            MarkingCodeRepository markingCodeRepository,
                            PasswordEncoder passwordEncoder) {
         return args -> {
-            migrateRoles(rolesRepository);
+            RoleBootstrap.migrateAndEnsure(rolesRepository);
             ensureTestUser(rolesRepository, userRepository, pharmacyRepository, passwordEncoder);
             ensureLeadershipUsers(rolesRepository, userRepository, pharmacyRepository, passwordEncoder);
 
@@ -41,8 +41,8 @@ public class DataInitializer {
             Pharmacy p2;
 
             if (userRepository.count() == 0) {
-                pharmacist = role(rolesRepository, RoleName.PHARMACIST, "Первостольник");
-                manager = role(rolesRepository, RoleName.MANAGER, "Заведующий аптекой");
+                pharmacist = rolesRepository.findByName(RoleName.PHARMACIST).orElseThrow();
+                manager = rolesRepository.findByName(RoleName.MANAGER).orElseThrow();
                 role(rolesRepository, RoleName.ADMIN, "Системный администратор");
                 role(rolesRepository, RoleName.ACCOUNTANT, "Бухгалтер");
                 role(rolesRepository, RoleName.DIRECTOR, "Директор");
@@ -125,36 +125,9 @@ public class DataInitializer {
             mc.setExpiryDate(b2.getExpiryDate());
             mc.setStatus(MarkingCodeStatus.IN_STOCK);
             mc.setMdlpStatus("REGISTERED");
-            mc.setNomenclature(n2);
             mc.setBatch(b2);
             markingCodeRepository.save(mc);
         };
-    }
-
-    private static void migrateRoles(RolesRepository rolesRepository) {
-        java.util.Map<String, String> legacyNames = java.util.Map.of(
-                "PHARMACIST", RoleName.PHARMACIST,
-                "MANAGER", RoleName.MANAGER,
-                "ADMIN", RoleName.ADMIN,
-                "ACCOUNTANT", RoleName.ACCOUNTANT,
-                "TEST", RoleName.TEST
-        );
-        legacyNames.forEach((legacy, current) ->
-                rolesRepository.findByName(legacy).ifPresent(role -> {
-                    role.setName(current);
-                    rolesRepository.save(role);
-                }));
-        ensureRole(rolesRepository, RoleName.DIRECTOR, "Директор");
-        ensureRole(rolesRepository, RoleName.NETWORK_OWNER, "Владелец аптечной сети");
-        ensureRole(rolesRepository, RoleName.ADMIN, "Системный администратор");
-        ensureRole(rolesRepository, RoleName.PHARMACIST, "Первостольник");
-        ensureRole(rolesRepository, RoleName.MANAGER, "Заведующий аптекой");
-        ensureRole(rolesRepository, RoleName.ACCOUNTANT, "Бухгалтер");
-        ensureRole(rolesRepository, RoleName.TEST, "Тест: все разделы");
-    }
-
-    private static void ensureRole(RolesRepository repo, String name, String description) {
-        repo.findByName(name).orElseGet(() -> role(repo, name, description));
     }
 
     private static void ensureLeadershipUsers(RolesRepository rolesRepository,

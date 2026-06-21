@@ -53,59 +53,71 @@
             </div>
         </form>
 
-        <div class="table-responsive">
+        <div class="table-responsive batch-table-wrap">
             <table class="data-table batch-table" id="batchesTable">
                 <thead>
                 <tr>
-                    <th>Номер партии</th>
-                    <th>Препарат / МНН</th>
+                    <th>Партия</th>
+                    <th>Препарат</th>
                     <th>Поставщик</th>
-                    <th>Дата прибытия</th>
-                    <th>Дата производства</th>
-                    <th>Годен до</th>
-                    <th>Цена за ед.</th>
-                    <th>Кол-во</th>
-                    <th>Зона хранения</th>
+                    <th>Сроки</th>
+                    <th class="text-right">Цена</th>
+                    <th class="text-right">Остаток</th>
+                    <th>Зона</th>
                     <th>Статус</th>
-                    <th>Действия</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="batch : ${batches.content}" th:classappend="${batch.writtenOff} ? 'row-written-off' : ''">
-                    <td><strong th:text="${batch.batchNumber}"></strong></td>
-                    <td>
-                        <div class="font-bold" th:text="${batch.nomenclature.brandName}"></div>
-                        <div class="text-xs text-muted" th:text="${batch.nomenclature.mnn}"></div>
+                    <td class="batch-col-number">
+                        <strong th:text="${batch.batchNumber}"></strong>
                     </td>
-                    <td th:text="${batch.supplier}"></td>
-                    <td th:text="${batch.receivedDate}"></td>
-                    <td th:text="${batch.productionDate}"></td>
-                    <td th:text="${batch.expiryDate}"></td>
-                    <td th:text="${@money.rubles(batch.price)}"></td>
-                    <td th:text="${batch.qtyReceived}"></td>
-                    <td><span class="storage-zone" th:text="${batch.storageZone}"></span></td>
-                    <td>
-                        <span th:if="${batch.writtenOff}" class="badge badge-danger">
+                    <td class="batch-col-product">
+                        <div class="truncate font-bold" th:text="${batch.nomenclature.brandName}"></div>
+                        <div class="truncate text-xs text-muted" th:text="${batch.nomenclature.mnn}"></div>
+                    </td>
+                    <td class="batch-col-supplier truncate" th:text="${batch.supplier}"></td>
+                    <td class="batch-col-dates">
+                        <div class="text-xs">
+                            <span class="text-muted">Поступ.:</span>
+                            <span th:text="${batch.receivedDate != null ? #temporals.format(batch.receivedDate, 'dd.MM.yy') : '—'}"></span>
+                        </div>
+                        <div class="text-xs">
+                            <span class="text-muted">Годен:</span>
+                            <span th:text="${batch.expiryDate != null ? #temporals.format(batch.expiryDate, 'dd.MM.yy') : '—'}"></span>
+                        </div>
+                    </td>
+                    <td class="text-right batch-col-price" th:text="${@money.rubles(batch.price)}"></td>
+                    <td class="text-right batch-col-qty">
+                        <strong th:text="${batch.qtyInStock != null ? batch.qtyInStock : 0}"></strong>
+                    </td>
+                    <td class="batch-col-zone">
+                        <span class="storage-zone" th:text="${@storageZone.label(batch.storageZone)}"></span>
+                    </td>
+                    <td class="batch-col-status">
+                        <span th:if="${batch.writtenOff}" class="badge badge-danger batch-status-badge">
                             <span class="status-dot dot-written-off"></span> Списана
                         </span>
-                        <span th:unless="${batch.writtenOff}" class="badge badge-success">
+                        <span th:unless="${batch.writtenOff}" class="badge badge-success batch-status-badge">
                             <span class="status-dot dot-active"></span> В наличии
                         </span>
                     </td>
-                    <td class="row-actions">
+                    <td class="row-actions batch-col-actions">
                         <a th:href="@{/batches/edit/{id}(id=${batch.id})}" class="btn btn-ghost btn-sm" title="Редактировать">
                             <i class="fas fa-pen"></i>
                         </a>
-                        <form th:action="@{/batches/delete/{id}(id=${batch.id})}" method="post" style="display:inline"
-                              onsubmit="return confirm('Удалить эту партию?');">
-                            <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Удалить">
+                        <form th:if="${batch.writtenOff}"
+                              th:action="@{/batches/delete/{id}(id=${batch.id})}" method="post"
+                              onsubmit="return confirm('Удалить запись о списанной партии?');">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Удалить запись">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
                     </td>
                 </tr>
                 <tr th:if="${batches.content.isEmpty()}">
-                    <td colspan="11" class="text-center text-muted p-1">Партии не найдены</td>
+                    <td colspan="9" class="text-center text-muted p-1">Партии не найдены</td>
                 </tr>
                 </tbody>
             </table>

@@ -30,43 +30,63 @@
 
     <div class="card">
         <div class="card-header"><h3 style="margin:0">Справочник категорий</h3></div>
-        <div class="table-responsive">
-            <table class="data-table">
+        <div class="category-table-wrap">
+            <table class="data-table category-table">
                 <thead>
                 <tr><th>Название</th><th>Код</th><th>Тип</th><th></th></tr>
                 </thead>
                 <tbody>
-                <tr th:each="c : ${categories}">
-                    <td th:text="${c.name}">—</td>
-                    <td th:text="${c.code != null ? c.code : '—'}">—</td>
-                    <td>
-                        <span th:if="${c.system}" class="badge badge-info">Системная</span>
-                        <span th:unless="${c.system}" class="badge badge-neutral">Пользовательская</span>
-                    </td>
-                    <td class="row-actions">
-                        <details th:if="${canManageSystem or !c.system}" class="text-sm">
-                            <summary class="btn btn-ghost btn-sm">Изменить</summary>
-                            <form th:action="@{/nomenclature/categories/save}" method="post" style="margin-top:0.5rem;padding:0.5rem;background:#f8fafc;border-radius:6px">
-                                <input type="hidden" name="id" th:value="${c.id}"/>
-                                <input type="text" name="name" th:value="${c.name}" class="form-control form-control-sm" required/>
-                                <input type="text" name="code" th:value="${c.code}" class="form-control form-control-sm mt-05" placeholder="Код"/>
-                                <label th:if="${canManageSystem}" class="form-check mt-05">
-                                    <input type="checkbox" name="system" value="true" th:checked="${c.system}"/>
-                                    <span>Системная</span>
-                                </label>
-                                <button type="submit" class="btn btn-primary btn-sm mt-05">Сохранить</button>
+                <th:block th:each="c : ${categories}">
+                    <tr>
+                        <td th:text="${c.name}">—</td>
+                        <td th:text="${c.code != null ? c.code : '—'}">—</td>
+                        <td>
+                            <span th:if="${c.system}" class="badge badge-info">Системная</span>
+                            <span th:unless="${c.system}" class="badge badge-neutral">Пользовательская</span>
+                        </td>
+                        <td class="row-actions category-actions">
+                            <button th:if="${canManageSystem or !c.system}" type="button"
+                                    class="btn btn-ghost btn-sm category-edit-btn"
+                                    th:attr="data-target='edit-row-' + ${c.id}"
+                                    th:onclick="|toggleCategoryEdit(this)|">Изменить</button>
+                            <span th:if="${!canManageSystem and c.system}" class="text-muted text-xs">Только просмотр</span>
+                            <form th:if="${canManageSystem or !c.system}"
+                                  th:action="@{/nomenclature/categories/delete/{id}(id=${c.id})}" method="post" style="display:inline"
+                                  onsubmit="return confirm('Удалить категорию?');">
+                                <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </form>
-                        </details>
-                        <span th:if="${!canManageSystem and c.system}" class="text-muted text-xs">Только просмотр</span>
-                        <form th:if="${canManageSystem or !c.system}"
-                              th:action="@{/nomenclature/categories/delete/{id}(id=${c.id})}" method="post" style="display:inline"
-                              onsubmit="return confirm('Удалить категорию?');">
-                            <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Удалить">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                    <tr th:if="${canManageSystem or !c.system}"
+                        th:id="'edit-row-' + ${c.id}" class="category-edit-row" style="display:none">
+                        <td colspan="4">
+                            <form th:action="@{/nomenclature/categories/save}" method="post" class="category-edit-form">
+                                <input type="hidden" name="id" th:value="${c.id}"/>
+                                <div class="category-edit-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">Название</label>
+                                        <input type="text" name="name" th:value="${c.name}" class="form-control form-control-sm" required/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Код</label>
+                                        <input type="text" name="code" th:value="${c.code}" class="form-control form-control-sm" placeholder="Код"/>
+                                    </div>
+                                    <div class="form-group" th:if="${canManageSystem}">
+                                        <label class="form-check" style="margin-top:1.6rem">
+                                            <input type="checkbox" name="system" value="true" th:checked="${c.system}"/>
+                                            <span>Системная</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-group category-edit-submit">
+                                        <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                </th:block>
                 <tr th:if="${categories.isEmpty()}">
                     <td colspan="4" class="text-center text-muted p-1">Категорий пока нет</td>
                 </tr>
@@ -74,5 +94,21 @@
             </table>
         </div>
     </div>
+
+    <script>
+        function toggleCategoryEdit(btn) {
+            const rowId = btn.getAttribute('data-target');
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const willOpen = row.style.display === 'none';
+            document.querySelectorAll('.category-edit-row').forEach(r => { r.style.display = 'none'; });
+            document.querySelectorAll('.category-edit-btn').forEach(b => { b.textContent = 'Изменить'; });
+            if (willOpen) {
+                row.style.display = '';
+                btn.textContent = 'Свернуть';
+                row.querySelector('input[name="name"]')?.focus();
+            }
+        }
+    </script>
 </section>
 </html>

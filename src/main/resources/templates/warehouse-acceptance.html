@@ -7,17 +7,13 @@
     </div>
 
     <div class="card" style="max-width:1000px">
-        <form th:action="@{/batches/create}" th:object="${batchCommand}" method="post">
+        <form th:action="@{/batches/create}" th:object="${batchCommand}" method="post" id="acceptanceForm">
             <div class="card-body">
                 <div class="form-group">
                     <label class="form-label">Аптека (точка приёмки)</label>
                     <select name="pharmacyId" class="form-control form-select" required>
                         <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"></option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Код маркировки (Data Matrix, опционально)</label>
-                    <input type="text" name="markingCode" class="form-control" placeholder="Скан или ввод кода"/>
                 </div>
 
                 <h3 style="margin:1.5rem 0 1rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">
@@ -35,8 +31,10 @@
                              style="position:absolute;top:100%;left:0;right:0;z-index:100;max-height:250px;overflow-y:auto;display:none;margin-top:4px;box-shadow:var(--shadow-md)"></div>
                     </div>
                     <input type="hidden" th:field="*{nomenclatureId}" id="selectedNomenclatureId"/>
-                    <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted" style="display:none">
-                        Выбрано: <strong id="selectedNomenclatureText"></strong>
+                    <div id="selectedNomenclatureInfo" class="mt-1 text-sm text-muted"
+                         th:style="${selectedNomenclatureText != null} ? 'display:block' : 'display:none'">
+                        Выбрано: <strong id="selectedNomenclatureText" th:text="${selectedNomenclatureText}"></strong>
+                        <span th:if="${selectedNomenclatureMarked}" class="badge badge-info" style="margin-left:0.5rem">Маркированный</span>
                         <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()" style="padding:0 0.3rem;margin-left:0.5rem">✕</button>
                     </div>
                     <div class="form-helper">Минимум 2 символа для поиска.</div>
@@ -87,13 +85,32 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Кол-во полученных</label>
-                        <input type="number" th:field="*{qtyReceived}" class="form-control" id="qtyReceived" required oninput="syncQty()"/>
+                        <input type="number" th:field="*{qtyReceived}" class="form-control" id="qtyReceived" required min="1" oninput="syncQty(); updateScannerVisibility()"/>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Кол-во оставшихся</label>
                         <input type="number" th:field="*{qtyInStock}" class="form-control" id="qtyRemaining" readonly style="background:#f1f5f9"/>
                     </div>
                 </div>
+
+                <div id="markingScanner" class="form-group mt-1" style="display:none">
+                    <label class="form-label">
+                        Маркировка Data Matrix
+                        <span id="markingCounter" class="text-muted text-sm"></span>
+                    </label>
+                    <div th:if="${markingError}" class="alert alert-danger" th:text="${markingError}"></div>
+                    <div style="display:flex;gap:0.5rem;align-items:flex-start">
+                        <input type="text" id="markingScanInput" class="form-control"
+                               placeholder="Сканируйте или введите код..." autocomplete="off"/>
+                        <button type="button" id="markingAcceptBtn" class="btn btn-secondary" style="white-space:nowrap">
+                            Принять
+                        </button>
+                    </div>
+                    <ul id="markingCodeList" style="list-style:none;padding:0;margin:0.75rem 0 0;font-size:0.875rem"></ul>
+                    <div id="markingCodesHidden"></div>
+                    <div class="form-helper">Отсканируйте код каждой упаковки. Число кодов должно совпасть с количеством в партии.</div>
+                </div>
+
                 <div class="form-group mt-1">
                     <label class="form-check">
                         <input type="checkbox" th:field="*{writtenOff}"/>
@@ -104,7 +121,7 @@
 
             <div class="card-footer" style="display:flex;justify-content:space-between;padding:1rem">
                 <a th:href="@{/batches}" class="btn btn-ghost">Отмена</a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="submitAcceptanceBtn">
                     <i class="fas fa-check"></i> Провести приёмку
                 </button>
             </div>
@@ -125,6 +142,16 @@
         const selectedIdInput = document.getElementById('selectedNomenclatureId');
         const selectedInfo = document.getElementById('selectedNomenclatureInfo');
         const selectedText = document.getElementById('selectedNomenclatureText');
+        const markingScanner = document.getElementById('markingScanner');
+        const markingScanInput = document.getElementById('markingScanInput');
+        const markingAcceptBtn = document.getElementById('markingAcceptBtn');
+        const markingCodeList = document.getElementById('markingCodeList');
+        const markingCodesHidden = document.getElementById('markingCodesHidden');
+        const markingCounter = document.getElementById('markingCounter');
+        const acceptanceForm = document.getElementById('acceptanceForm');
+
+        let selectedMarked = [[${selectedNomenclatureMarked != null && selectedNomenclatureMarked}]];
+        const scannedCodes = /*[[${scannedMarkingCodes}]]*/ [];
 
         if (searchInput) {
             searchInput.addEventListener('input', debounce(async function () {
@@ -151,9 +178,16 @@
                 return;
             }
             dropdown.innerHTML = items.map(item => `
-                <div class="p-2 nomenclature-item border-bottom" data-id="${item.id}" data-text="${escapeHtml(item.displayText || item.brandName)}" style="cursor:pointer">
-                    <div class="font-bold">${escapeHtml(item.brandName)} ${item.dosage || ''} ${item.dosageUnit || ''}</div>
-                    <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${escapeHtml(item.formOfRelease)}</div>
+                <div class="p-2 nomenclature-item border-bottom"
+                     data-id="${item.id}"
+                     data-marked="${item.marked === true}"
+                     data-text="${escapeHtml(item.displayText || item.brandName)}"
+                     style="cursor:pointer">
+                    <div class="font-bold">
+                        ${escapeHtml(item.brandName)} ${item.dosage || ''} ${item.dosageUnit || ''}
+                        ${item.marked ? '<span class="badge badge-info" style="margin-left:0.25rem">Марк.</span>' : ''}
+                    </div>
+                    <div class="text-xs text-muted">${escapeHtml(item.mnn)} • ${escapeHtml(item.formOfReleaseLabel || item.formOfRelease)}</div>
                 </div>
             `).join('');
             dropdown.style.display = 'block';
@@ -164,14 +198,20 @@
             if (!item) return;
             selectedIdInput.value = item.dataset.id;
             selectedText.textContent = item.dataset.text;
+            selectedMarked = item.dataset.marked === 'true';
             selectedInfo.style.display = 'block';
             searchInput.value = '';
             dropdown.style.display = 'none';
+            updateScannerVisibility();
         });
 
         function clearSelection() {
             selectedIdInput.value = '';
             selectedInfo.style.display = 'none';
+            selectedMarked = false;
+            scannedCodes.length = 0;
+            renderMarkingList();
+            updateScannerVisibility();
             searchInput.focus();
         }
 
@@ -193,6 +233,114 @@
             const remaining = document.getElementById('qtyRemaining');
             if (remaining) remaining.value = received || '';
         }
+
+        function expectedQty() {
+            const v = parseInt(document.getElementById('qtyReceived')?.value, 10);
+            return Number.isFinite(v) && v > 0 ? v : 0;
+        }
+
+        function updateScannerVisibility() {
+            const show = selectedMarked && expectedQty() > 0;
+            if (markingScanner) {
+                markingScanner.style.display = show ? 'block' : 'none';
+            }
+            if (show && markingScanInput) {
+                markingScanInput.disabled = scannedCodes.length >= expectedQty();
+            }
+            updateMarkingCounter();
+        }
+
+        function updateMarkingCounter() {
+            if (!markingCounter) return;
+            const expected = expectedQty();
+            if (selectedMarked && expected > 0) {
+                markingCounter.textContent = `(${scannedCodes.length} / ${expected})`;
+            } else {
+                markingCounter.textContent = '';
+            }
+        }
+
+        function renderMarkingList() {
+            if (!markingCodeList || !markingCodesHidden) return;
+            markingCodeList.innerHTML = scannedCodes.map((code, index) => `
+                <li style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;border-bottom:1px solid var(--border)">
+                    <span style="flex:1;word-break:break-all;font-family:monospace">${escapeHtml(code)}</span>
+                    <button type="button" class="btn btn-ghost btn-sm" data-index="${index}" title="Удалить">✕</button>
+                </li>
+            `).join('');
+            markingCodesHidden.innerHTML = '';
+            scannedCodes.forEach(code => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'markingCodes';
+                input.value = code;
+                markingCodesHidden.appendChild(input);
+            });
+            markingCodeList.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    scannedCodes.splice(parseInt(btn.dataset.index, 10), 1);
+                    renderMarkingList();
+                    updateScannerVisibility();
+                });
+            });
+            updateMarkingCounter();
+        }
+
+        function acceptMarkingCode() {
+            if (!selectedMarked || expectedQty() <= 0) return;
+            const code = markingScanInput?.value.trim();
+            if (!code) return;
+            if (scannedCodes.includes(code)) {
+                alert('Этот код уже добавлен');
+                markingScanInput.select();
+                return;
+            }
+            if (scannedCodes.length >= expectedQty()) {
+                alert('Уже отсканировано достаточно кодов');
+                return;
+            }
+            scannedCodes.push(code);
+            markingScanInput.value = '';
+            renderMarkingList();
+            updateScannerVisibility();
+            if (scannedCodes.length < expectedQty()) {
+                markingScanInput.focus();
+            }
+        }
+
+        markingAcceptBtn?.addEventListener('click', acceptMarkingCode);
+        markingScanInput?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                acceptMarkingCode();
+            }
+        });
+
+        acceptanceForm?.addEventListener('submit', function (e) {
+            if (!selectedMarked) return;
+            const expected = expectedQty();
+            if (expected <= 0) {
+                e.preventDefault();
+                alert('Укажите количество упаковок в партии');
+                return;
+            }
+            if (scannedCodes.length !== expected) {
+                e.preventDefault();
+                alert(`Отсканируйте все коды: ${scannedCodes.length} из ${expected}`);
+            }
+        });
+
+        document.getElementById('qtyReceived')?.addEventListener('input', function () {
+            while (scannedCodes.length > expectedQty()) {
+                scannedCodes.pop();
+            }
+            renderMarkingList();
+            updateScannerVisibility();
+        });
+
+        renderMarkingList();
+        updateScannerVisibility();
+        syncQty();
     </script>
 </section>
 </html>

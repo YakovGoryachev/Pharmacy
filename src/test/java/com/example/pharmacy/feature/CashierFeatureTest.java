@@ -7,6 +7,7 @@ import com.example.pharmacy.Repository.BatchRepository;
 import com.example.pharmacy.Repository.ChequeRepository;
 import com.example.pharmacy.Repository.NomenclatureRepository;
 import com.example.pharmacy.Repository.PharmacyRepository;
+import com.example.pharmacy.Repository.PrescriptionRepository;
 import com.example.pharmacy.Service.ChequeService;
 import com.example.pharmacy.Service.MarkingCodeService;
 import com.example.pharmacy.Service.StockService;
@@ -40,6 +41,7 @@ class CashierFeatureTest {
     @Mock MarkingCodeService markingCodeService;
     @Mock PharmacyRepository pharmacyRepository;
     @Mock BatchRepository batchRepository;
+    @Mock PrescriptionRepository prescriptionRepository;
 
     @InjectMocks ChequeService chequeService;
 
@@ -163,6 +165,50 @@ class CashierFeatureTest {
         }
 
         @Test
+        @DisplayName("Create — один рецепт нельзя привязать к разным препаратам в чеке")
+        void duplicatePrescriptionInCart() {
+            CartItemDto item1 = rxItem("Нурофен", "RX-SAME", "ЛПУ-1");
+            CartItemDto item2 = rxItem("Амоксициллин", "RX-SAME", "ЛПУ-2");
+
+            BusinessException ex = assertThrows(BusinessException.class,
+                    () -> chequeService.checkout(1L, cashier, PaymentMethod.CASH, List.of(item1, item2)));
+
+            assertTrue(ex.getMessage().contains("нельзя использовать"));
+            verify(chequeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Create — отдельный рецепт для каждой рецептурной позиции")
+        void separatePrescriptionsPerItem() {
+            CartItemDto item1 = rxItem("Нурофен", "RX-001", "ЛПУ-1");
+            CartItemDto item2 = rxItem("Амоксициллин", "RX-002", "ЛПУ-2");
+
+            when(pharmacyRepository.findById(1L)).thenReturn(Optional.of(pharmacy));
+            when(nomenclatureRepository.findById(100L)).thenReturn(Optional.of(product));
+            when(batchRepository.findById(10L)).thenReturn(Optional.of(batch));
+            when(prescriptionRepository.existsInActiveSale(any())).thenReturn(false);
+            when(chequeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            Cheque cheque = chequeService.checkout(1L, cashier, PaymentMethod.CASH, List.of(item1, item2));
+
+            assertEquals(2, cheque.getChequePositions().size());
+            assertEquals("RX-001", cheque.getChequePositions().get(0).getPrescription().getPrescriptionNumber());
+            assertEquals("RX-002", cheque.getChequePositions().get(1).getPrescription().getPrescriptionNumber());
+            assertEquals("ЛПУ-1", cheque.getChequePositions().get(0).getPrescription().getLpuCode());
+            assertEquals("ЛПУ-2", cheque.getChequePositions().get(1).getPrescription().getLpuCode());
+        }
+
+        @Test
+        @DisplayName("Create — наркотический без данных рецепта")
+        void narcoticRequiresPrescription() {
+            CartItemDto item = item(1, 50000);
+            item.setNarcotic(true);
+            item.setReceiptRequired(true);
+            assertThrows(BusinessException.class,
+                    () -> chequeService.checkout(1L, cashier, PaymentMethod.CASH, List.of(item)));
+        }
+
+        @Test
         @DisplayName("Create — маркированный товар без кода")
         void markedWithoutCode() {
             CartItemDto item = item(1, 20000);
@@ -196,6 +242,19 @@ class CashierFeatureTest {
         item.setQuantity(qty);
         item.setPrice(priceKopecks);
         item.setDisplayName("Нурофен");
+        return item;
+    }
+
+    private CartItemDto rxItem(String name, String rxNumber, String lpu) {
+        CartItemDto item = item(1, 50000);
+        item.setDisplayName(name);
+        item.setReceiptRequired(true);
+        PrescriptionFormDto rx = new PrescriptionFormDto();
+        rx.setPatientName("Иванов И.И.");
+        rx.setPrescriptionNumber(rxNumber);
+        rx.setPrescriptionDate(LocalDate.now());
+        rx.setLpuCode(lpu);
+        item.setPrescription(rx);
         return item;
     }
 

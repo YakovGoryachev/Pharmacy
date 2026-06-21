@@ -51,67 +51,58 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="data-table" id="nomTable">
+        <div class="table-responsive nom-table-wrap">
+            <table class="data-table nomenclature-table" id="nomTable">
                 <thead>
                 <tr>
-                    <th>Тип</th>
-                    <th>
-                        <span>Наименование</span>
-                        <a th:href="@{/nomenclature(sort='tradeName',dir=${sortDir=='asc'?'desc':'asc'},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="btn btn-ghost btn-sm" style="padding:0 0.3rem;">
+                    <th class="nom-col-name">
+                        Наименование
+                        <a th:href="@{/nomenclature(sort='tradeName',dir=${sortDir=='asc'?'desc':'asc'},q=${param.q},atx=${param.atx},category=${param.category},flags=${param.flags})}" class="btn btn-ghost btn-sm" style="padding:0 0.2rem;vertical-align:middle;">
                             <i th:class="${sortField=='tradeName'?(sortDir=='asc'?'fas fa-sort-up':'fas fa-sort-down'):'fas fa-sort'}"></i>
                         </a>
                     </th>
-                    <th>МНН</th>
-                    <th>АТХ</th>
-                    <th>Форма / Дозировка</th>
-                    <th>Производитель</th>
-                    <th>Штрихкод</th>
-                    <th>Мин. остаток</th>
-                    <th>Статусы</th>
-                    <th>Действия</th>
+                    <th class="nom-col-mnn">МНН</th>
+                    <th class="nom-col-atx">АТХ</th>
+                    <th class="nom-col-form">Форма</th>
+                    <th class="nom-col-manufacturer">Производитель</th>
+                    <th class="nom-col-min">Мин.</th>
+                    <th class="nom-col-status">Статус</th>
+                    <th class="nom-col-actions"></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="nom : ${nomenclatures}">
-                    <td>
-                        <span class="badge badge-neutral" th:switch="${nom.productType}">
-                            <span th:case="'MEDICINE'">ЛС</span>
-                            <span th:case="'PARAPHARMACY'">Парафарма</span>
-                            <span th:case="'COSMETIC'">Косметика</span>
-                            <span th:case="'HYGIENE'">Гигиена</span>
-                            <span th:case="'MEDICAL_DEVICE'">Медизделие</span>
-                            <span th:case="*">Прочее</span>
-                        </span>
+                    <td class="nom-col-name">
+                        <div class="truncate font-bold" th:text="${nom.brandName}">Название</div>
+                        <div class="text-xs text-muted" style="display:flex;flex-wrap:wrap;gap:0.25rem;align-items:center;margin-top:0.15rem">
+                            <span class="badge badge-neutral" th:text="${@nomenclature.productTypeShort(nom.productType)}">ЛС</span>
+                            <span th:if="${nom.barcode != null and !nom.barcode.isBlank()}" class="text-xs text-muted truncate" th:text="${nom.barcode}"></span>
+                        </div>
                     </td>
-                    <td>
-                        <div class="font-bold" th:text="${nom.brandName}">Название</div>
+                    <td class="nom-col-mnn truncate" th:text="${nom.mnn != null ? nom.mnn : '—'}">MNN</td>
+                    <td class="nom-col-atx"><span class="badge badge-info" th:text="${nom.atxCode}">C03</span></td>
+                    <td class="nom-col-form">
+                        <div class="truncate" th:text="${@nomenclature.formOfRelease(nom.formOfRelease)}">Таблетки</div>
+                        <div class="truncate text-xs text-muted" th:text="${@nomenclature.dosageLine(nom.dosage, nom.dosageUnit)}">200 мг</div>
                     </td>
-                    <td th:text="${nom.mnn != null ? nom.mnn : '—'}">MNN</td>
-                    <td><span class="badge badge-info" th:text="${nom.atxCode}">C03</span></td>
-                    <td>
-                        <div th:text="${nom.formOfRelease}">Таблетки</div>
-                        <div class="text-xs text-muted" th:text="${nom.dosage}">200 мг</div>
+                    <td class="nom-col-manufacturer">
+                        <div class="truncate" th:text="${nom.manufacturer}">Производитель</div>
+                        <div class="truncate text-xs text-muted" th:text="${nom.country}">Страна</div>
                     </td>
-                    <td>
-                        <div th:text="${nom.manufacturer}">Производитель</div>
-                        <div class="text-xs text-muted" th:text="${nom.country}">Страна</div>
-                    </td>
-                    <td class="text-xs" th:text="${nom.barcode}">460</td>
-                    <td th:text="${nom.minStockLevel}">10</td>
-                    <td>
+                    <td class="nom-col-min" th:text="${nom.minStockLevel}">10</td>
+                    <td class="nom-col-status">
                         <span th:if="${nom.receipt}" class="badge badge-warning" title="По рецепту">📋</span>
                         <span th:if="${nom.narcotic}" class="badge badge-danger" title="Наркотическое">⚠️</span>
                         <span th:if="${nom.psychotropic}" class="badge badge-danger" title="Психотропное">🧠</span>
-                        <span th:if="${nom.receipt != true && nom.narcotic != true && nom.psychotropic != true}" class="badge badge-success">Без рецепта</span>
+                        <span th:if="${nom.receipt != true && nom.narcotic != true && nom.psychotropic != true}" class="badge badge-success">Без рец.</span>
                     </td>
-                    <td class="row-actions">
+                    <td class="row-actions nom-col-actions">
                         <a th:href="@{/nomenclature/edit/{id}(id=${nom.id})}" class="btn btn-ghost btn-sm" title="Редактировать"><i class="fas fa-pen"></i></a>
                         <a th:href="@{/nomenclature/delete/{id}(id=${nom.id})}" class="btn btn-ghost btn-sm text-danger" title="Удалить" onclick="return confirm('Удалить номенклатуру?')"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(nomenclatures)}">
-                    <td colspan="11" class="text-center text-muted p-1">
+                    <td colspan="8" class="text-center text-muted p-1">
                         Номенклатура не найдена. <a th:href="@{/nomenclature/create}">Добавить первую запись</a>
                     </td>
                 </tr>

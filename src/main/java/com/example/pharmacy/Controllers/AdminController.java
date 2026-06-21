@@ -1,12 +1,14 @@
 package com.example.pharmacy.Controllers;
 
 import com.example.pharmacy.Pojo.Pharmacy;
+import com.example.pharmacy.Pojo.RoleName;
 import com.example.pharmacy.Pojo.User;
 import com.example.pharmacy.Repository.PharmacyRepository;
 import com.example.pharmacy.Repository.RolesRepository;
 import com.example.pharmacy.Service.AuditService;
 import com.example.pharmacy.Service.PharmacyService;
 import com.example.pharmacy.Service.UserService;
+import com.example.pharmacy.exception.BusinessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.stereotype.Controller;
@@ -52,18 +54,40 @@ public class AdminController {
     @GetMapping("/users/create")
     public String createUserForm(Model model) {
         model.addAttribute("user", new User());
-        model.addAttribute("roles", rolesRepository.findAll());
+        model.addAttribute("roles", rolesRepository.findByNameInOrderByDescriptionAsc(RoleName.assignableByAdmin()));
         model.addAttribute("pharmacies", pharmacyRepository.findByActiveTrue());
+        model.addAttribute("editMode", false);
         model.addAttribute("pageTitle", "Новый пользователь");
+        return "admin-user-form";
+    }
+
+    @GetMapping("/users/edit/{id}")
+    public String editUserForm(@PathVariable Long id, Model model) {
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        model.addAttribute("roles", rolesRepository.findByNameInOrderByDescriptionAsc(RoleName.assignableByAdmin()));
+        model.addAttribute("pharmacies", pharmacyRepository.findByActiveTrue());
+        model.addAttribute("editMode", true);
+        model.addAttribute("selectedRoleId", user.getRole() != null ? user.getRole().getId() : null);
+        model.addAttribute("selectedPharmacyId", user.getPharmacy() != null ? user.getPharmacy().getId() : null);
+        model.addAttribute("pageTitle", "Редактирование пользователя");
         return "admin-user-form";
     }
 
     @PostMapping("/users/save")
     public String saveUser(@ModelAttribute User user,
-                           @RequestParam String password,
+                           @RequestParam(required = false) String password,
                            @RequestParam Long roleId,
-                           @RequestParam(required = false) Long pharmacyId) {
-        userService.save(user, password, roleId, pharmacyId);
+                           @RequestParam(required = false) Long pharmacyId,
+                           RedirectAttributes ra) {
+        boolean editing = user.getId() != null;
+        try {
+            userService.save(user, password, roleId, pharmacyId);
+            ra.addFlashAttribute("successMessage", editing ? "Пользователь обновлён" : "Пользователь создан");
+        } catch (BusinessException e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+            return editing ? "redirect:/admin/users/edit/" + user.getId() : "redirect:/admin/users/create";
+        }
         return "redirect:/admin/users";
     }
 

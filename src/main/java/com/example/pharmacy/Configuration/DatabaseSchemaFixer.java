@@ -1,5 +1,6 @@
 package com.example.pharmacy.Configuration;
 
+import com.example.pharmacy.Repository.RolesRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -19,16 +20,20 @@ import java.util.List;
 public class DatabaseSchemaFixer implements ApplicationRunner {
 
     private final JdbcTemplate jdbc;
+    private final RolesRepository rolesRepository;
 
-    public DatabaseSchemaFixer(JdbcTemplate jdbc) {
+    public DatabaseSchemaFixer(JdbcTemplate jdbc, RolesRepository rolesRepository) {
         this.jdbc = jdbc;
+        this.rolesRepository = rolesRepository;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        RoleBootstrap.migrateAndEnsure(rolesRepository);
         patchBooleanColumn("nomenclature", "marked", false);
         patchIntegerColumn("users", "failed_login_attempts", 0);
         patchBooleanColumn("cheques", "is_returned", false);
+        patchIntegerColumn("categories", "markup_percent", 0);
         fixPostgresSequences();
         ensureBatchNumberUnique();
     }
@@ -66,10 +71,13 @@ public class DatabaseSchemaFixer implements ApplicationRunner {
         if (!isPostgres()) {
             return;
         }
-        jdbc.execute("""
-                CREATE UNIQUE INDEX IF NOT EXISTS batch_batch_number_key ON batch (batch_number)
-                WHERE batch_number IS NOT NULL
-                """);
+        try {
+            jdbc.execute("""
+                    CREATE UNIQUE INDEX IF NOT EXISTS batch_batch_number_key ON batch (batch_number)
+                    WHERE batch_number IS NOT NULL
+                    """);
+        } catch (Exception ignored) {
+        }
     }
 
     private void patchBooleanColumn(String table, String column, boolean defaultValue) {

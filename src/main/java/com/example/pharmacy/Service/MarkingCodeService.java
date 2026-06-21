@@ -9,7 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,8 +63,30 @@ public class MarkingCodeService {
         return parsed;
     }
 
+    public void validateReceiptCodes(List<String> rawCodes, boolean markingRequired, int qtyReceived) {
+        List<String> codes = normalizeCodes(rawCodes);
+        if (markingRequired) {
+            if (qtyReceived <= 0) {
+                throw new BusinessException("Укажите количество упаковок в партии");
+            }
+            if (codes.size() != qtyReceived) {
+                throw new BusinessException("Отсканируйте все коды: " + codes.size() + " из " + qtyReceived);
+            }
+        } else if (!codes.isEmpty()) {
+            throw new BusinessException("Коды маркировки указываются только для маркированных товаров");
+        }
+    }
+
     @Transactional
-    public MarkingCode registerOnReceipt(String raw, Nomenclature nomenclature, Batch batch) {
+    public void registerAllOnReceipt(Batch batch, List<String> rawCodes, boolean markingRequired, int qtyReceived) {
+        validateReceiptCodes(rawCodes, markingRequired, qtyReceived);
+        for (String code : normalizeCodes(rawCodes)) {
+            registerOnReceipt(code, batch);
+        }
+    }
+
+    @Transactional
+    public MarkingCode registerOnReceipt(String raw, Batch batch) {
         ParsedMarking p = parseCode(raw);
         if (markingCodeRepository.existsByCode(p.rawCode)) {
             throw new BusinessException("Код маркировки уже зарегистрирован");
@@ -73,7 +98,6 @@ public class MarkingCodeService {
         mc.setExpiryDate(p.expiryDate != null ? p.expiryDate : batch.getExpiryDate());
         mc.setStatus(MarkingCodeStatus.IN_STOCK);
         mc.setMdlpStatus("REGISTERED");
-        mc.setNomenclature(nomenclature);
         mc.setBatch(batch);
         return markingCodeRepository.save(mc);
     }
@@ -86,6 +110,11 @@ public class MarkingCodeService {
         if (!MarkingCodeStatus.IN_STOCK.equals(mc.getStatus())
                 && !MarkingCodeStatus.RESERVED.equals(mc.getStatus())) {
             throw new BusinessException("Код не доступен для продажи: " + mc.getStatus());
+        }
+        if (position.getBatch() != null) {
+            if (mc.getBatch() == null || !mc.getBatch().getId().equals(position.getBatch().getId())) {
+                throw new BusinessException("Код маркировки принадлежит другой партии");
+            }
         }
         mc.setStatus(MarkingCodeStatus.DISPOSED);
         mc.setWithdrawnAt(Instant.now());
@@ -124,6 +153,19 @@ public class MarkingCodeService {
 
     public List<MarkingCode> listJournal() {
         return markingCodeRepository.findAll();
+    }
+
+    private List<String> normalizeCodes(List<String> rawCodes) {
+        if (rawCodes == null || rawCodes.isEmpty()) {
+            return List.of();
+        }
+        Set<String> unique = new LinkedHashSet<>();
+        for (String raw : rawCodes) {
+            if (raw != null && !raw.isBlank()) {
+                unique.add(raw.trim());
+            }
+        }
+        return new ArrayList<>(unique);
     }
 
     public static class ParsedMarking {

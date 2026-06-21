@@ -10,6 +10,8 @@ public class CartItemDto implements Serializable {
     private int quantity;
     private int price;
     private boolean receiptRequired;
+    private boolean narcotic;
+    private boolean psychotropic;
     private boolean marked;
     private String markingCode;
     private PrescriptionFormDto prescription;
@@ -68,6 +70,22 @@ public class CartItemDto implements Serializable {
 
     public void setReceiptRequired(boolean receiptRequired) {
         this.receiptRequired = receiptRequired;
+    }
+
+    public boolean isNarcotic() {
+        return narcotic;
+    }
+
+    public void setNarcotic(boolean narcotic) {
+        this.narcotic = narcotic;
+    }
+
+    public boolean isPsychotropic() {
+        return psychotropic;
+    }
+
+    public void setPsychotropic(boolean psychotropic) {
+        this.psychotropic = psychotropic;
     }
 
     public boolean isMarked() {

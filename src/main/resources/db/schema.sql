@@ -171,8 +171,7 @@ CREATE TABLE IF NOT EXISTS marking_codes (
     disposal_document_id BIGINT,
     mdlp_status VARCHAR(30),
     created_at TIMESTAMP,
-    nomenclature_id BIGINT REFERENCES nomenclature(id),
-    batch_id BIGINT REFERENCES batch(id),
+    batch_id BIGINT NOT NULL REFERENCES batch(id),
     cheque_position_id BIGINT REFERENCES cheque_positions(id)
 );
 

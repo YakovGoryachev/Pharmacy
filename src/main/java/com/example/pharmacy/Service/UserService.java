@@ -1,6 +1,7 @@
 package com.example.pharmacy.Service;
 
 import com.example.pharmacy.Pojo.Pharmacy;
+import com.example.pharmacy.Pojo.RoleName;
 import com.example.pharmacy.Pojo.Roles;
 import com.example.pharmacy.Pojo.User;
 import com.example.pharmacy.Repository.PharmacyRepository;
@@ -43,21 +44,51 @@ public class UserService {
     @Transactional
     @Audited(entity = "User", action = "SAVE")
     public User save(User user, String rawPassword, Long roleId, Long pharmacyId) {
-        if (user.getId() == null && userRepository.existsByLogin(user.getLogin())) {
-            throw new BusinessException("Логин уже занят");
-        }
-        if (rawPassword != null && !rawPassword.isBlank()) {
-            user.setPassword(passwordEncoder.encode(rawPassword));
+        User toSave;
+        if (user.getId() != null) {
+            toSave = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new BusinessException("Пользователь не найден"));
+            String login = user.getLogin() != null ? user.getLogin().trim() : "";
+            if (login.isBlank()) {
+                throw new BusinessException("Укажите логин");
+            }
+            if (!login.equals(toSave.getLogin()) && userRepository.existsByLogin(login)) {
+                throw new BusinessException("Логин уже занят");
+            }
+            toSave.setLogin(login);
+            toSave.setName(user.getName());
+            if (rawPassword != null && !rawPassword.isBlank()) {
+                toSave.setPassword(passwordEncoder.encode(rawPassword));
+            }
+        } else {
+            if (user.getLogin() == null || user.getLogin().isBlank()) {
+                throw new BusinessException("Укажите логин");
+            }
+            if (userRepository.existsByLogin(user.getLogin().trim())) {
+                throw new BusinessException("Логин уже занят");
+            }
+            if (rawPassword == null || rawPassword.isBlank()) {
+                throw new BusinessException("Укажите пароль");
+            }
+            toSave = user;
+            toSave.setLogin(user.getLogin().trim());
+            toSave.setPassword(passwordEncoder.encode(rawPassword));
         }
         Roles role = rolesRepository.findById(roleId).orElseThrow();
-        user.setRole(role);
+        if (!RoleName.assignableByAdmin().contains(role.getName())) {
+            throw new BusinessException("Администратор не может назначить эту роль");
+        }
+        if (RoleName.requiresPharmacy(role.getName()) && pharmacyId == null) {
+            throw new BusinessException("Для роли «" + role.getDescription() + "» нужно указать аптеку");
+        }
+        toSave.setRole(role);
         if (pharmacyId != null) {
             Pharmacy p = pharmacyRepository.findById(pharmacyId).orElseThrow();
-            user.setPharmacy(p);
+            toSave.setPharmacy(p);
         } else {
-            user.setPharmacy(null);
+            toSave.setPharmacy(null);
         }
-        return userRepository.save(user);
+        return userRepository.save(toSave);
     }
 
     @Transactional

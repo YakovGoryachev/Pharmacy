@@ -3,16 +3,17 @@
       th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
 <section th:fragment="section">
     <form th:action="@{/batches/marking/send-mdlp}" method="post" style="margin-bottom:1rem">
-        <button type="submit" class="btn btn-primary">Отправить PENDING в МДЛП (эмуляция)</button>
+        <button type="submit" class="btn btn-primary">Отправить коды в МДЛП</button>
     </form>
     <table class="table">
-        <thead><tr><th>Код</th><th>GTIN</th><th>Статус</th><th>МДЛП</th></tr></thead>
+        <thead><tr><th>Код</th><th>GTIN</th><th>Партия</th><th>Статус</th><th>МДЛП</th></tr></thead>
         <tbody>
         <tr th:each="c : ${codes}">
             <td th:text="${c.code}">c</td>
             <td th:text="${c.gtin}">g</td>
-            <td th:text="${c.status}">s</td>
-            <td th:text="${c.mdlpStatus}">m</td>
+            <td th:text="${c.batch != null ? c.batch.batchNumber : '—'}">b</td>
+            <td th:text="${@marking.stockStatus(c.status)}">s</td>
+            <td th:text="${@marking.mdlpStatus(c.mdlpStatus)}">m</td>
         </tr>
         </tbody>
     </table>

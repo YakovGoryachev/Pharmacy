@@ -12,6 +12,7 @@ import com.example.pharmacy.Service.WriteOffService;
 import com.example.pharmacy.security.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -79,27 +80,59 @@ public class BatchController {
     }
 
     @PostMapping("/create")
+    @Transactional
     public String create(@ModelAttribute BatchDto bdto,
                          @RequestParam Long pharmacyId,
-                         @RequestParam(required = false) String markingCode,
+                         @RequestParam(required = false) List<String> markingCodes,
                          Model model,
                          RedirectAttributes ra) {
         if (bdto.getNomenclatureId() == null || bdto.getNomenclatureId() <= 0) {
-            model.addAttribute("batchCommand", bdto);
-            model.addAttribute("nomenclatureError", "Выберите препарат из справочника");
-            model.addAttribute("pharmacies", pharmacyRepository.findByActiveTrue());
-            model.addAttribute("pageTitle", "Приёмка ЛП");
-            model.addAttribute("activeNav", "batches");
-            return "warehouse-acceptance";
+            return acceptanceFormWithError(model, bdto, markingCodes, null,
+                    "Выберите препарат из справочника", true);
+        }
+        NomenclatureDto nom = nomenclatureService.findById(bdto.getNomenclatureId());
+        boolean marked = Boolean.TRUE.equals(nom.getMarked());
+        int qty = bdto.getQtyReceived() != null ? bdto.getQtyReceived() : 0;
+        try {
+            markingCodeService.validateReceiptCodes(markingCodes, marked, qty);
+        } catch (com.example.pharmacy.exception.BusinessException ex) {
+            return acceptanceFormWithError(model, bdto, markingCodes, nom, ex.getMessage(), false);
         }
         Batch batch = batchService.saveWithStock(bdto, pharmacyId);
-        if (markingCode != null && !markingCode.isBlank()) {
-            markingCodeService.registerOnReceipt(markingCode, batch.getNomenclature(), batch);
-        }
+        markingCodeService.registerAllOnReceipt(batch, markingCodes, marked, qty);
         ra.addFlashAttribute("successMessage",
                 "Приёмка успешно проведена. Партия «" + batch.getBatchNumber()
                         + "» оприходована на склад. Можно сразу оприходовать следующую партию.");
         return "redirect:/batches/create";
+    }
+
+    private String acceptanceFormWithError(Model model, BatchDto bdto, List<String> markingCodes,
+                                           NomenclatureDto nom, String error, boolean nomenclatureError) {
+        model.addAttribute("batchCommand", bdto);
+        model.addAttribute("pharmacies", pharmacyRepository.findByActiveTrue());
+        model.addAttribute("pageTitle", "Приёмка ЛП");
+        model.addAttribute("activeNav", "batches");
+        model.addAttribute("scannedMarkingCodes", markingCodes != null ? markingCodes : List.of());
+        if (nomenclatureError) {
+            model.addAttribute("nomenclatureError", error);
+        } else {
+            model.addAttribute("markingError", error);
+        }
+        if (nom != null) {
+            model.addAttribute("selectedNomenclatureText", buildNomenclatureDisplay(nom));
+            model.addAttribute("selectedNomenclatureMarked", nom.getMarked());
+        } else if (bdto.getNomenclatureId() != null && bdto.getNomenclatureId() > 0) {
+            NomenclatureDto selected = nomenclatureService.findById(bdto.getNomenclatureId());
+            model.addAttribute("selectedNomenclatureText", buildNomenclatureDisplay(selected));
+            model.addAttribute("selectedNomenclatureMarked", selected.getMarked());
+        }
+        return "warehouse-acceptance";
+    }
+
+    private static String buildNomenclatureDisplay(NomenclatureDto nom) {
+        return nom.getBrandName()
+                + (nom.getDosage() != null ? " " + nom.getDosage() + " " + nom.getDosageUnit() : "")
+                + " (" + nom.getMnn() + ")";
     }
 
     @GetMapping("/edit/{id}")
@@ -130,8 +163,9 @@ public class BatchController {
     }
 
     @PostMapping("/delete/{id}")
-    public String deleteBatch(@PathVariable Long id) {
+    public String deleteBatch(@PathVariable Long id, RedirectAttributes ra) {
         batchService.deleteById(id);
+        ra.addFlashAttribute("successMessage", "Запись о партии удалена");
         return "redirect:/batches";
     }
 
@@ -247,7 +281,8 @@ public class BatchController {
     @PostMapping("/marking/send-mdlp")
     public String sendMdlp(RedirectAttributes ra) {
         int count = markingCodeService.sendPendingToMdlp();
-        ra.addFlashAttribute("successMessage", "Отправлено в МДЛП (эмуляция): " + count);
+        ra.addFlashAttribute("successMessage",
+                count > 0 ? "В МДЛП отправлено кодов: " + count : "Нет кодов, ожидающих отправки в МДЛП");
         return "redirect:/batches/marking";
     }
 }

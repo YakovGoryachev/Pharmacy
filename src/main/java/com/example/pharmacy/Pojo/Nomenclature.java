@@ -49,11 +49,6 @@ public class Nomenclature {
     @JsonIgnoreProperties("nomenclatures")
     private AtcManual atcManual;
 
-    //check
-//    @ManyToMany(mappedBy = "nomenclatures", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    @JsonIgnoreProperties("nomenclatures")
-//    private List<NomenclatureCategory> nomenclatureCategories;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "nomenclature_category",
@@ -62,19 +57,6 @@ public class Nomenclature {
     )
     @JsonIgnoreProperties("nomenclatures")
     private List<NomenclatureCategory> nomenclatureCategories;
-
-
-    @OneToMany(mappedBy = "nomenclature", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("nomenclature")
-    private List<MarkingCode> markingCodes;
-
-    public List<MarkingCode> getMarkingCodes() {
-        return markingCodes;
-    }
-
-    public void setMarkingCodes(List<MarkingCode> markingCodes) {
-        this.markingCodes = markingCodes;
-    }
 
     public List<NomenclatureCategory> getNomenclatureCategories() {
         return nomenclatureCategories;
@@ -226,6 +208,12 @@ public class Nomenclature {
 
     public void setPsychotropic(Boolean psychotropic) {
         this.psychotropic = psychotropic;
+    }
+
+    public boolean requiresPrescription() {
+        return Boolean.TRUE.equals(receipt)
+                || Boolean.TRUE.equals(narcotic)
+                || Boolean.TRUE.equals(psychotropic);
     }
 
     public String getDosageUnit() {

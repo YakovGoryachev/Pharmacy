@@ -6,8 +6,6 @@
         <a th:href="@{/reports}">Отчёты</a> <span class="breadcrumb-sep">/</span> <span>История</span>
     </div>
 
-    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-
     <div class="card">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
             <h3 style="margin:0">Сформированные отчёты</h3>
@@ -20,7 +18,7 @@
                 </thead>
                 <tbody>
                 <tr th:each="r : ${reports}">
-                    <td th:text="${r.reportType}">t</td>
+                    <td th:text="${@report.typeLabel(r.reportType)}">t</td>
                     <td th:text="${#temporals.format(r.generatedAt, 'dd.MM.yyyy HH:mm')}">d</td>
                     <td><a th:href="@{/reports/file(path=${r.filePath})}" class="btn btn-sm btn-ghost">Скачать PDF</a></td>
                 </tr>

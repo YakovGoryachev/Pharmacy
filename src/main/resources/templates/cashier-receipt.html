@@ -14,7 +14,14 @@
             <thead><tr><th>Товар</th><th>Кол-во</th><th class="text-right">Сумма</th></tr></thead>
             <tbody>
             <tr th:each="p : ${cheque.chequePositions}">
-                <td th:text="${p.nomenclature.brandName}">n</td>
+                <td>
+                    <div th:text="${p.nomenclature.brandName}">n</div>
+                    <div th:if="${p.prescription != null}" class="text-xs text-muted" style="margin-top:0.25rem">
+                        Рецепт: <span th:text="${p.prescription.prescriptionNumber}"></span>
+                        от <span th:text="${p.prescription.prescriptionDate}"></span>,
+                        ЛПУ <span th:text="${p.prescription.lpuCode}"></span>
+                    </div>
+                </td>
                 <td th:text="${p.quantity}">1</td>
                 <td class="text-right" th:text="${#numbers.formatDecimal(p.sumOfPosition / 100.0, 1, 2)} + ' ₽'">0</td>
             </tr>

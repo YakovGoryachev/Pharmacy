@@ -7,7 +7,9 @@ import com.example.pharmacy.Repository.BatchRepository;
 import com.example.pharmacy.Repository.NomenclatureRepository;
 import com.example.pharmacy.Specifications.BatchSpecifications;
 import com.example.pharmacy.audit.Audited;
+import com.example.pharmacy.exception.BusinessException;
 import com.example.pharmacy.util.MoneyUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +47,14 @@ public class BatchService {
     @Transactional
     @Audited(entity = "Batch", action = "RECEIVE")
     public Batch saveWithStock(BatchDto bdto, Long pharmacyId) {
+        assertUniqueBatchNumber(bdto.getBatchNumber(), null);
         Batch batch = mapToPojo(bdto);
-        batch = batchRepository.save(batch);
+        try {
+            batch = batchRepository.save(batch);
+        } catch (DataIntegrityViolationException ex) {
+            throw new BusinessException("Партия с номером «" + bdto.getBatchNumber().trim()
+                    + "» уже есть в системе");
+        }
         int qty = bdto.getQtyReceived() != null ? bdto.getQtyReceived() : bdto.getQtyInStock();
         if (qty > 0 && pharmacyId != null) {
             stockService.receiveStock(pharmacyId, batch, qty);
@@ -57,6 +65,7 @@ public class BatchService {
     @Transactional
     public Batch update(BatchDto bdto) {
         Batch batch = batchRepository.findById(bdto.getId()).orElseThrow();
+        assertUniqueBatchNumber(bdto.getBatchNumber(), bdto.getId());
         Nomenclature n = nomenclatureRepository.findById(bdto.getNomenclatureId()).orElseThrow();
         batch.setNomenclature(n);
         batch.setBatchNumber(bdto.getBatchNumber());
@@ -75,7 +84,23 @@ public class BatchService {
     }
 
     public void deleteById(Long id) {
-        batchRepository.deleteById(id);
+        Batch batch = batchRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Партия не найдена"));
+        if (!Boolean.TRUE.equals(batch.getWrittenOff())) {
+            throw new BusinessException("Удалить можно только списанную партию. Для остатков используйте списание.");
+        }
+        batchRepository.delete(batch);
+    }
+
+    private void assertUniqueBatchNumber(String batchNumber, Long excludeId) {
+        if (batchNumber == null || batchNumber.isBlank()) {
+            return;
+        }
+        batchRepository.findByBatchNumber(batchNumber.trim()).ifPresent(existing -> {
+            if (excludeId == null || !excludeId.equals(existing.getId())) {
+                throw new BusinessException("Партия с номером «" + batchNumber.trim() + "» уже есть в системе");
+            }
+        });
     }
 
     public List<Batch> findExpiringBatches(LocalDate before) {

@@ -2,6 +2,7 @@ package com.example.pharmacy.DTO;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.Locale;
 
 public class PrescriptionFormDto implements Serializable {
     private String patientName;
@@ -69,8 +70,15 @@ public class PrescriptionFormDto implements Serializable {
     }
 
     public boolean isComplete() {
-        return prescriptionNumber != null && !prescriptionNumber.isBlank()
+        return patientName != null && !patientName.isBlank()
+                && prescriptionNumber != null && !prescriptionNumber.isBlank()
                 && prescriptionDate != null
                 && lpuCode != null && !lpuCode.isBlank();
+    }
+
+    public String identityKey() {
+        String series = prescriptionSeries != null ? prescriptionSeries.trim().toLowerCase(Locale.ROOT) : "";
+        String number = prescriptionNumber != null ? prescriptionNumber.trim().toLowerCase(Locale.ROOT) : "";
+        return series + "#" + number;
     }
 }

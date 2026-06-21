@@ -1,24 +1,51 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
-<section th:fragment="section" class="card">
-    <form th:action="@{/admin/users/save}" method="post" th:object="${user}">
-        <input type="hidden" th:field="*{id}"/>
-        <div class="form-group"><label>Логин</label><input th:field="*{login}" class="form-control" required/></div>
-        <div class="form-group"><label>ФИО</label><input th:field="*{name}" class="form-control"/></div>
-        <div class="form-group"><label>Пароль</label><input type="password" name="password" class="form-control" required/></div>
-        <div class="form-group"><label>Роль</label>
-            <select name="roleId" class="form-control">
-                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.description}"></option>
-            </select>
-        </div>
-        <div class="form-group"><label>Аптека</label>
-            <select name="pharmacyId" class="form-control">
-                <option value="">—</option>
-                <option th:each="p : ${pharmacies}" th:value="${p.id}" th:text="${p.name}"></option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Сохранить</button>
-    </form>
-</section>
-</html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(${pageTitle}, ${activeNav}, ~{::section})}">
+<section th:fragment="section" class="card" style="max-width:640px">
+    <div class="breadcrumb" style="margin-bottom:1rem">
+        <a th:href="@{/admin/users}">Пользователи</a>
+        <span class="breadcrumb-sep">/</span>
+        <span th:text="${editMode} ? 'Редактирование' : 'Новый пользователь'">Форма</span>
+    </div>
+    <form th:action="@{/admin/users/save}" method="post" th:object="${user}">
+        <input type="hidden" th:field="*{id}"/>
+        <div class="form-group">
+            <label class="form-label">Логин</label>
+            <input th:field="*{login}" class="form-control" required/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">ФИО</label>
+            <input th:field="*{name}" class="form-control"/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" th:required="${!editMode}"/>
+            <div class="form-helper" th:if="${editMode}">Оставьте пустым, если пароль менять не нужно</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Роль</label>
+            <select name="roleId" class="form-control form-select" required>
+                <option value="" disabled th:selected="${selectedRoleId == null}">Выберите роль</option>
+                <option th:each="r : ${roles}" th:value="${r.id}"
+                        th:selected="${selectedRoleId != null and selectedRoleId == r.id}"
+                        th:text="${r.description != null ? r.description : r.name}"></option>
+            </select>
+            <div class="form-helper">Для кассира выберите «Первостольник (кассир)» и укажите аптеку.</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Аптека</label>
+            <select name="pharmacyId" class="form-control form-select">
+                <option value="" th:selected="${selectedPharmacyId == null}">—</option>
+                <option th:each="p : ${pharmacies}" th:value="${p.id}"
+                        th:selected="${selectedPharmacyId != null and selectedPharmacyId == p.id}"
+                        th:text="${p.name}"></option>
+            </select>
+            <div class="form-helper">Обязательна для первостольника, заведующего и бухгалтера.</div>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:1rem">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a th:href="@{/admin/users}" class="btn btn-ghost">Отмена</a>
+        </div>
+    </form>
+</section>
+</html>

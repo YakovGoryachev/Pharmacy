@@ -58,11 +58,8 @@
                         <a th:href="@{/cashier}" class="btn btn-ghost btn-sm"><i class="fas fa-undo"></i></a>
                     </form>
 
-                    <p class="text-sm text-muted mb-1">
-                        Только товары в наличии (FEFO).
-                        <span th:if="${totalElements > 0}">
-                            Всего: <strong th:text="${totalElements}"></strong>
-                        </span>
+                    <p class="text-sm text-muted mb-1" th:if="${totalElements > 0}">
+                        Всего: <strong th:text="${totalElements}"></strong>
                     </p>
                     <div th:if="${searchQuery != null and !searchQuery.isBlank() and searchQuery.trim().length() < 2}"
                          class="alert alert-info">
@@ -77,36 +74,43 @@
                         </span>
                     </div>
 
-                    <div class="table-responsive" th:if="${!catalogRows.isEmpty()}">
+                    <div class="table-responsive pos-catalog-wrap" th:if="${!catalogRows.isEmpty()}">
                         <table class="data-table pos-catalog-table">
                             <thead>
                             <tr>
-                                <th>Торговая марка</th>
-                                <th>МНН</th>
-                                <th>Дозировка / форма</th>
-                                <th class="text-right">Цена</th>
-                                <th class="text-right">Доступно</th>
-                                <th>Аптека</th>
-                                <th></th>
+                                <th class="pos-col-product">Препарат</th>
+                                <th class="pos-col-form">Форма / дозировка</th>
+                                <th class="pos-col-price">Цена / ост.</th>
+                                <th class="pos-col-pharmacy">Аптека</th>
+                                <th class="pos-col-actions"></th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="row : ${catalogRows}">
-                                <td>
-                                    <span class="font-bold" th:text="${row.brandName}">prep</span>
-                                    <span th:if="${row.receipt}" class="badge badge-warning" style="margin-left:0.35rem">Рецепт</span>
-                                    <span th:if="${row.marked}" class="badge badge-info" style="margin-left:0.35rem">Маркировка</span>
+                                <td class="pos-col-product">
+                                    <div class="pos-product-name truncate font-bold" th:text="${row.brandName}" th:title="${row.brandName}">prep</div>
+                                    <div class="pos-product-mnn truncate text-xs text-muted" th:text="${row.mnn}" th:title="${row.mnn}">mnn</div>
+                                    <div class="pos-product-badges" th:if="${row.receiptRequired or row.marked}">
+                                        <span th:if="${row.receipt}" class="badge badge-warning">Рецепт</span>
+                                        <span th:if="${row.narcotic}" class="badge badge-danger">Нарк.</span>
+                                        <span th:if="${row.psychotropic}" class="badge badge-danger">Псих.</span>
+                                        <span th:if="${row.marked}" class="badge badge-info">Марк.</span>
+                                    </div>
                                 </td>
-                                <td class="text-muted" th:text="${row.mnn}">mnn</td>
-                                <td class="text-sm" th:text="${row.dosageText}">—</td>
-                                <td class="text-right"
-                                    th:text="${@money.rubles(row.price)}">0</td>
-                                <td class="text-right" th:text="${row.availableQty}">0</td>
-                                <td>
-                                    <span th:text="${row.pharmacyName}">аптека</span>
-                                    <span th:if="${row.pharmacyId == userPharmacyId}" class="badge badge-success text-xs" style="margin-left:0.25rem">ваша</span>
+                                <td class="pos-col-form">
+                                    <span class="pos-form-text" th:text="${row.dosageText}" th:title="${row.dosageText}">—</span>
                                 </td>
-                                <td class="actions-cell">
+                                <td class="pos-col-price">
+                                    <div class="font-bold text-right" th:text="${@money.rubles(row.price)}">0</div>
+                                    <div class="text-xs text-muted text-right">
+                                        <span th:text="${row.availableQty}">0</span> шт.
+                                    </div>
+                                </td>
+                                <td class="pos-col-pharmacy">
+                                    <div class="truncate" th:text="${row.pharmacyName}" th:title="${row.pharmacyName}">аптека</div>
+                                    <span th:if="${row.pharmacyId == userPharmacyId}" class="badge badge-success text-xs">ваша</span>
+                                </td>
+                                <td class="actions-cell pos-col-actions">
                                     <form th:action="@{/cashier/add}" method="post" class="pos-add-form"
                                           th:if="${row.canAddToCart}">
                                         <input type="hidden" name="nomenclatureId" th:value="${row.nomenclatureId}"/>
@@ -118,8 +122,8 @@
                                         <input th:if="${row.marked}" type="text" name="markingCode"
                                                class="form-control pos-marking-input" placeholder="Data Matrix" required/>
                                     </form>
-                                    <span th:if="${!row.canAddToCart}" class="text-xs text-muted">
-                                        Продажа только в своей аптеке
+                                    <span th:if="${!row.canAddToCart}" class="pos-unavailable-note text-xs text-muted">
+                                        Только в своей аптеке
                                     </span>
                                 </td>
                             </tr>
@@ -153,57 +157,71 @@
             <div class="pos-cart-items" th:if="${cart.isEmpty()}">
                 <p class="text-muted text-center p-1">Чек пуст. Выберите товар слева и добавьте позицию.</p>
             </div>
-            <div class="pos-cart-items" th:if="${!cart.isEmpty()}">
-                <div class="pos-cart-item" th:each="item, stat : ${cart}">
-                    <div style="flex:1;min-width:0">
-                        <div class="truncate font-bold" th:text="${item.displayName}">x</div>
-                        <div class="text-xs text-muted">
-                            <span th:text="${item.quantity} + ' × '"></span>
-                            <span th:text="${@money.rubles(item.price)}"></span>
-                            <span th:if="${item.receiptRequired}" class="badge badge-warning">Рецепт</span>
-                            <span th:if="${item.marked}" class="badge badge-info">Марк.</span>
+            <form th:unless="${cart.isEmpty()}" th:action="@{/cashier/checkout}" method="post" class="pos-checkout-form">
+                <div class="pos-cart-items">
+                    <div class="pos-cart-item" th:each="item, stat : ${cart}">
+                        <div class="pos-cart-item-main">
+                            <div style="flex:1;min-width:0">
+                                <div class="truncate font-bold" th:text="${item.displayName}">x</div>
+                                <div class="text-xs text-muted">
+                                    <span th:text="${item.quantity} + ' × '"></span>
+                                    <span th:text="${@money.rubles(item.price)}"></span>
+                                    <span th:if="${item.receiptRequired}" class="badge badge-warning">Рецепт</span>
+                                    <span th:if="${item.narcotic}" class="badge badge-danger">Нарк.</span>
+                                    <span th:if="${item.psychotropic}" class="badge badge-danger">Псих.</span>
+                                    <span th:if="${item.marked}" class="badge badge-info">Марк.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-05">
+                                <strong th:text="${#numbers.formatDecimal(item.lineTotal / 100.0, 1, 2)} + ' ₽'">0</strong>
+                                <button type="submit"
+                                        th:formaction="@{/cashier/remove}"
+                                        name="index"
+                                        th:value="${stat.index}"
+                                        class="btn btn-sm btn-ghost text-danger"
+                                        formnovalidate
+                                        title="Удалить">×</button>
+                            </div>
+                        </div>
+                        <div th:if="${item.receiptRequired}" class="pos-cart-rx">
+                            <div class="pos-cart-rx-title">Данные рецепта</div>
+                            <input type="text"
+                                   th:name="|rxPatientName_${stat.index}|"
+                                   th:value="${item.prescription != null ? item.prescription.patientName : ''}"
+                                   class="form-control form-control-sm" placeholder="ФИО пациента" required/>
+                            <input type="text"
+                                   th:name="|rxNumber_${stat.index}|"
+                                   th:value="${item.prescription != null ? item.prescription.prescriptionNumber : ''}"
+                                   class="form-control form-control-sm" placeholder="Серия и номер рецепта" required/>
+                            <input type="date"
+                                   th:name="|rxDate_${stat.index}|"
+                                   th:value="${item.prescription != null && item.prescription.prescriptionDate != null ? item.prescription.prescriptionDate : ''}"
+                                   class="form-control form-control-sm" required/>
+                            <input type="text"
+                                   th:name="|rxLpu_${stat.index}|"
+                                   th:value="${item.prescription != null ? item.prescription.lpuCode : ''}"
+                                   class="form-control form-control-sm" placeholder="Код ЛПУ" required/>
                         </div>
                     </div>
-                    <div class="flex items-center gap-05">
-                        <strong th:text="${#numbers.formatDecimal(item.lineTotal / 100.0, 1, 2)} + ' ₽'">0</strong>
-                        <form th:action="@{/cashier/remove}" method="post">
-                            <input type="hidden" name="index" th:value="${stat.index}"/>
-                            <button type="submit" class="btn btn-sm btn-ghost text-danger" title="Удалить">×</button>
-                        </form>
+                </div>
+                <div class="pos-cart-footer">
+                    <div class="pos-cart-total">
+                        <span>Итого</span>
+                        <span th:text="${#numbers.formatDecimal(cartTotal / 100.0, 1, 2)} + ' ₽'">0 ₽</span>
                     </div>
-                </div>
-            </div>
-            <div class="pos-cart-footer">
-                <div class="pos-cart-total">
-                    <span>Итого</span>
-                    <span th:text="${#numbers.formatDecimal(cartTotal / 100.0, 1, 2)} + ' ₽'">0 ₽</span>
-                </div>
-                <form th:action="@{/cashier/checkout}" method="post" th:if="${!cart.isEmpty()}">
                     <div class="form-group">
                         <label class="text-sm">Способ оплаты</label>
                         <select name="paymentMethod" class="form-control form-select">
                             <option th:each="pm : ${paymentMethods}" th:value="${pm}" th:text="${pm}"></option>
                         </select>
                     </div>
-                    <details class="mt-1" th:if="${cartNeedsRx}">
-                        <summary class="text-sm font-bold cursor-pointer">Данные рецепта</summary>
-                        <div class="form-group mt-1">
-                            <input type="text" name="rxPatientName" class="form-control" placeholder="ФИО пациента" required/>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" name="rxNumber" class="form-control" placeholder="Серия и номер рецепта" required/>
-                        </div>
-                        <div class="form-group">
-                            <input type="date" name="rxDate" class="form-control" required/>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" name="rxLpu" class="form-control" placeholder="Код ЛПУ" required/>
-                        </div>
-                    </details>
+                    <p class="text-xs text-muted" th:if="${cartNeedsRx}">
+                        Для каждого рецептурного препарата заполните отдельный рецепт выше.
+                    </p>
                     <button type="submit" class="btn btn-success btn-block mt-1">Оплатить (F2)</button>
-                </form>
-                <p class="text-xs text-muted text-center mt-1" th:if="${cart.isEmpty()}">Добавьте позиции для оплаты</p>
-            </div>
+                </div>
+            </form>
+            <p class="text-xs text-muted text-center mt-1 p-1" th:if="${cart.isEmpty()}">Добавьте позиции для оплаты</p>
         </div>
     </div>
 </section>

@@ -14,6 +14,7 @@ import com.example.pharmacy.DTO.CartItemDto;
 import com.example.pharmacy.DTO.CashierCatalogPageDto;
 import com.example.pharmacy.DTO.PrescriptionFormDto;
 import com.example.pharmacy.security.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/cashier")
@@ -117,7 +119,9 @@ public class CashierController {
         item.setQuantity(quantity);
         int batchPrice = stock.getBatch().getPrice() != null ? stock.getBatch().getPrice() : 0;
         item.setPrice(batchPrice);
-        item.setReceiptRequired(Boolean.TRUE.equals(n.getReceipt()));
+        item.setReceiptRequired(n.requiresPrescription());
+        item.setNarcotic(Boolean.TRUE.equals(n.getNarcotic()));
+        item.setPsychotropic(Boolean.TRUE.equals(n.getPsychotropic()));
         item.setMarked(Boolean.TRUE.equals(n.getMarked()));
         item.setMarkingCode(markingCode);
         cart.add(item);
@@ -138,30 +142,44 @@ public class CashierController {
     @PostMapping("/checkout")
     public String checkout(@RequestParam PaymentMethod paymentMethod,
                            @ModelAttribute("cart") List<CartItemDto> cart,
-                           @RequestParam(required = false) String rxPatientName,
-                           @RequestParam(required = false) String rxNumber,
-                           @RequestParam(required = false) java.time.LocalDate rxDate,
-                           @RequestParam(required = false) String rxLpu,
+                           HttpServletRequest request,
                            RedirectAttributes ra) {
         if (!paymentMethod.isAvailableAtCashier()) {
             ra.addFlashAttribute("errorMessage", "Выбранный способ оплаты недоступен на кассе");
             return "redirect:/cashier";
         }
-        for (CartItemDto item : cart) {
-            if (item.isReceiptRequired()) {
-                PrescriptionFormDto rx = new PrescriptionFormDto();
-                rx.setPatientName(rxPatientName);
-                rx.setPrescriptionNumber(rxNumber);
-                rx.setPrescriptionDate(rxDate);
-                rx.setLpuCode(rxLpu);
-                item.setPrescription(rx);
-            }
-        }
+        bindPrescriptions(cart, request);
         Long pharmacyId = SecurityUtils.currentPharmacyId();
         Cheque cheque = chequeService.checkout(pharmacyId, SecurityUtils.currentUser(), paymentMethod, new ArrayList<>(cart));
         cart.clear();
         ra.addFlashAttribute("successMessage", "Продажа оформлена, чек " + cheque.getNumberCheque());
         return "redirect:/cashier/receipt/" + cheque.getId();
+    }
+
+    private static void bindPrescriptions(List<CartItemDto> cart, HttpServletRequest request) {
+        for (int i = 0; i < cart.size(); i++) {
+            CartItemDto item = cart.get(i);
+            if (!item.isReceiptRequired()) {
+                continue;
+            }
+            PrescriptionFormDto rx = new PrescriptionFormDto();
+            rx.setPatientName(trim(request.getParameter("rxPatientName_" + i)));
+            rx.setPrescriptionNumber(trim(request.getParameter("rxNumber_" + i)));
+            String date = request.getParameter("rxDate_" + i);
+            if (date != null && !date.isBlank()) {
+                rx.setPrescriptionDate(LocalDate.parse(date));
+            }
+            rx.setLpuCode(trim(request.getParameter("rxLpu_" + i)));
+            item.setPrescription(rx);
+        }
+    }
+
+    private static String trim(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @GetMapping("/receipt/{id}")
